@@ -1,6 +1,6 @@
 # Touhou 6 ~ The Embodiment of Scarlet Devil Apworld
 
-This is an implementation of touhou 6 for [Archipelago](https://github.com/ArchipelagoMW/Archipelago)
+This is an implementation of touhou 6 for [Archipelago](https://github.com/ArchipelagoMW/Archipelago)<br />
 Tracker: https://github.com/Nepley/eosd-poptracker
 
 ## Locations
@@ -19,7 +19,7 @@ Tracker: https://github.com/Nepley/eosd-poptracker
 **Filler**: 1 Power Point
 
 ## Options
-By default, the game except you to be able to finish the game once you unlock the final stage, you can set the resources needed for the stages 3/4 and stages 5/6.
+By default, the game except you to be able to finish the game once you unlock the final stage, you can set the resources needed for the stages 3/4 and stages 5/6.<br />
 You can also choose if you must finish the game with just one character or both of them.
 
 ## How to use
