@@ -11,7 +11,7 @@ from .Rules import set_rules
 import random
 
 def launch_client():
-    """Launch a rabi ribi client instance"""
+    """Launch a client instance"""
     from worlds.touhou6.Client import launch
     launch_subprocess(launch, name="Touhou6Client")
 
@@ -31,7 +31,6 @@ class T6World(World):
     topology_present = True
     data_version = 4
     required_client_version = (0, 3, 5)
-    # web = RLWeb()
 
     item_name_to_id = {name: data.code for name, data in item_table.items()}
     location_name_to_id = {name: data.code for name, data in location_table.items()}

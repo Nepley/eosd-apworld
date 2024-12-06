@@ -1,6 +1,7 @@
 # Touhou 6 ~ The Embodiment of Scarlet Devil Apworld
 
 This is an implementation of touhou 6 for [Archipelago](https://github.com/ArchipelagoMW/Archipelago)
+Tracker: https://github.com/Nepley/eosd-poptracker
 
 ## Locations
 * MidBoss Defeated
@@ -23,8 +24,17 @@ You can also choose if you must finish the game with just one character or both 
 
 ## How to use
 
-Launch the client from Archipelago and launch the game. The client should connect to the process of touhou 6 automatically.
-Then you can go to the practice mode and start playing. You start with a random character/shot type.
+1. Connect the client "Touhou 6" found in the archipelago launcher to the server.
+2. Once the message "Waiting for connection to Touhou 6..." appeared, launch the game (you can launch it before)
+3. If the message "Touhou 6 process found. Starting loop..." appeared, you're good to go
+
+**You need to have your system locale set to Japanese**
+
+Here the step for Windows 11:
+1. Go to 'Control Panel' -> 'Time & language' -> 'Region' ->  'Language & Region'
+2. In the Related settings, select 'Administrative Language settings'
+3. Go to the Administrative tab and click on 'Change system locale'
+4. Choose Japanese (Japan) and reboot Windows
 
 ## Known Issues
 * If you go to a character/shot type without any stage, you can still confirm and you will go to stage 1. The game is not supposed to have no stage in practice.
