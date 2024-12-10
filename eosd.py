@@ -20,6 +20,10 @@ ADDR_HP_ENEMY = [0x000B957C, 0x000BA444, 0x000BB30C, 0x000BC1D4, 0x000BD09C, 0x0
 ADDR_LIVES = 0x0029D4BA
 ADDR_BOMBS = 0x0029D4BB
 ADDR_POWER = 0x0029D4B0
+ADDR_CONTINUE = 0x0029D4B8
+
+# Stats
+ADDR_MISSES = 0x0029BCC0
 
 # Practice stage access
 ADDR_REIMU_A_EASY = 0x0029CCE1
@@ -151,6 +155,9 @@ ADDR_MARISA_B_LUNATIC_SCORE_4 = 0x0029D408
 ADDR_MARISA_B_LUNATIC_SCORE_5 = 0x0029D458
 ADDR_MARISA_B_LUNATIC_SCORE_6 = 0x0029D4A8
 
+# Others
+ADDR_KILL_CONDITION = 0x00026DC6
+
 class eosdController:
 	"""Class accessing the game memory"""
 	gameName = "東方紅魔郷"
@@ -166,6 +173,10 @@ class eosdController:
 	addrLives = None
 	addrBombs = None
 	addrPower = None
+	addrContinues = None
+
+	# Stats
+	addrMisses = None
 
 	# Practice stage access
 	addrReimuAEasy = None
@@ -194,6 +205,7 @@ class eosdController:
 	# Other
 	addrGameMode = None
 	addrHpEnemies = None
+	addrKillCondition = None
 
 	def __init__(self):
 		self.pm = pymem.Pymem(self.gameName)
@@ -206,6 +218,9 @@ class eosdController:
 		self.addrLives = self.pm.base_address+ADDR_LIVES
 		self.addrBombs = self.pm.base_address+ADDR_BOMBS
 		self.addrPower = self.pm.base_address+ADDR_POWER
+		self.addrContinues = self.pm.base_address+ADDR_CONTINUE
+
+		self.addrMisses = self.pm.base_address+ADDR_MISSES
 
 		self.addrReimuAEasy = self.pm.base_address+ADDR_REIMU_A_EASY
 		self.addrReimuANormal = self.pm.base_address+ADDR_REIMU_A_NORMAL
@@ -231,6 +246,8 @@ class eosdController:
 		self.addrHpEnemies = []
 		for addr in ADDR_HP_ENEMY:
 			self.addrHpEnemies.append(self.pm.base_address+addr)
+
+		self.addrKillCondition = self.pm.base_address+ADDR_KILL_CONDITION
 
 		self.addrPracticeScore = {
 			REIMU:
@@ -415,6 +432,12 @@ class eosdController:
 
 	def getPower(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrPower, 1))
+	
+	def getMisses(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrMisses, 1))
+	
+	def getContinues(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrContinues, 1))
 
 	def getReimuAEasy(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrReimuAEasy, 1))
@@ -496,6 +519,12 @@ class eosdController:
 
 	def setPower(self, newPower):
 		self.pm.write_short(self.addrPower, newPower)
+	
+	def setContinues(self, newContinue):
+		self.pm.write_short(self.addrContinues, newContinue)
+
+	def setMisses(self, newMisses):
+		self.pm.write_short(self.addrMisses, newMisses)
 
 	def setReimuAEasy(self, newReimuAEasy):
 		self.pm.write_int(self.addrReimuAEasy, newReimuAEasy)
@@ -552,6 +581,12 @@ class eosdController:
 	def setPracticeStageScore(self, characterId, shotId, difficultyId, stageId, newScore):
 		return self.pm.write_int(self.addrPracticeScore[characterId][shotId][difficultyId][stageId], newScore)
 
+	def setKill(self, active):
+		if active:
+			self.pm.write_bytes(self.addrKillCondition, bytes([0x90, 0x90]), 2)
+		else:
+			self.pm.write_bytes(self.addrKillCondition, bytes([0xEB, 0x22]), 2)
+
 class eosdState:
 	"""Class keeping track of what's unlock for the game"""
 	lives = None
@@ -559,6 +594,7 @@ class eosdState:
 	power = None
 	endings = None
 	stages = None
+	continues = None
 
 	hasLunatic = None
 	hasHard = None
@@ -581,6 +617,7 @@ class eosdState:
 		self.power = 0
 		self.endings = 0
 		self.stages = 1
+		self.continues = 0
 
 		self.hasLunatic = True
 		self.hasHard = False
@@ -762,10 +799,20 @@ class eosdState:
 	def givePower(self):
 		self.gameController.setPower(self.power)
 
-	def giveAllResources(self):
+	def giveContinues(self):
+		self.gameController.setContinues(3 - self.continues)
+
+	def setDifficulty(self, excludeEasy = False):
+		self.gameController.setDifficulty(self.getHighestDifficulty(excludeEasy))
+
+	def giveAllResources(self, normalMode = False):
 		self.giveLives()
 		self.giveBombs()
 		self.givePower()
+
+		if normalMode:
+			self.giveContinues()
+			self.setDifficulty(True)
 
 	def updateStageList(self):
 		if(self.hasReimuA):
@@ -979,6 +1026,17 @@ class eosdState:
 	def getEndings(self):
 		return self.endings
 
+	def getHighestDifficulty(self, excludeEasy = False):
+		difficulty = 3
+		if(self.hasEasy and not excludeEasy):
+			difficulty = 0
+		elif(self.hasNormal or (self.hasEasy and excludeEasy)):
+			difficulty = 1
+		elif(self.hasHard):
+			difficulty = 2
+
+		return difficulty
+
 	#
 	# Set Items Functions
 	#
@@ -1019,10 +1077,14 @@ class eosdState:
 		if(self.stages < 6):
 			self.stages += 1
 
+	def addContinue(self):
+		if(self.continues < 3):
+			self.continues += 1
+
 	def addEnding(self):
 		self.endings += 1
 
-	def unlockDifficulty(self, difficulty):
+	def unlockDifficulty(self, difficulty, update = False):
 		if(difficulty == 0):
 			self.hasLunatic = True
 		elif(difficulty == 1):
@@ -1031,6 +1093,9 @@ class eosdState:
 			self.hasNormal = True
 		elif(difficulty == 3):
 			self.hasEasy = True
+
+		if update:
+			self.setDifficulty(True)
 
 	def unlockCharacter(self, character):
 		if(character == 0):

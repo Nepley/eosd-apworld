@@ -46,7 +46,7 @@ class T6World(World):
         character_list = []
         total_locations = len(self.multiworld.get_unfilled_locations(self.player))
         number_placed_item = 0
-        # randomize_stage = getattr(self.options, "randomize_stage")
+        mode = getattr(self.options, "mode")
         for name, data in item_table.items():
             quantity = data.max_quantity
 
@@ -57,8 +57,11 @@ class T6World(World):
             if data.category == "Endings":
                 continue
 
-            # if data.category == "Stages" and not randomize_stage:
-            #     continue
+            if data.category == "Stages" and mode != 0:
+                continue
+
+            if data.category == "[Normal] Items" and mode != 1:
+                continue
 
             if data.category == "Characters":
                 character_list.append(name)

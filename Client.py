@@ -17,6 +17,7 @@ class T6Context(CommonContext):
 		super().__init__(server_address, password)
 		self.game = "Touhou 6"
 		self.items_handling = 0b111  # Item from starting inventory, own world and other world
+		self.pending_death_link = False
 
 		self.eosd = None # eosdState
 
@@ -64,6 +65,11 @@ class T6Context(CommonContext):
 			self.location_ap_id_to_name = {v: k for k, v in self.location_name_to_ap_id.items()}
 			self.item_name_to_ap_id = args["data"]["games"]["Touhou 6"]["item_name_to_id"]
 			self.item_ap_id_to_name = {v: k for k, v in self.item_name_to_ap_id.items()}
+		elif cmd == "Bounced":
+			tags = args.get("tags", [])
+			# we can skip checking "DeathLink" in ctx.tags, as otherwise we wouldn't have been send this
+			if "DeathLink" in tags and self.last_death_link != args["data"]["time"]:
+				self.on_deathlink(args["data"])
 
 	def client_recieved_initial_server_data(self):
 		"""
@@ -96,6 +102,8 @@ class T6Context(CommonContext):
 		:NetworkItem item: The item to give to the player
 		"""
 
+		isNormalMode = self.options['mode'] == 1
+
 		# We wait for the link to be etablished to the game before giving any items
 		while self.eosd is None:
 			await asyncio.sleep(0.5)
@@ -108,7 +116,7 @@ class T6Context(CommonContext):
 					self.eosd.addBomb()
 				case 60002:
 					self.difficulties += 1
-					self.eosd.unlockDifficulty(self.difficulties)
+					self.eosd.unlockDifficulty(self.difficulties, isNormalMode)
 				case 60003:
 					self.eosd.unlockCharacter(0)
 				case 60004:
@@ -125,6 +133,8 @@ class T6Context(CommonContext):
 						await self.send_msgs([{"cmd": 'StatusUpdate', "status": 30}])
 				case 60015:
 					self.eosd.add25Power()
+				case 60016:
+					self.eosd.addContinues()
 				case 60030:
 					self.eosd.add1Power()
 				case _:
@@ -184,6 +194,18 @@ class T6Context(CommonContext):
 			self.previous_location_checked = current_locations
 			await self.send_msgs([{"cmd": 'LocationChecks', "locations": locations}])
 
+	def on_deathlink(self, data):
+		self.pending_death_link = True
+		return super().on_deathlink(data)
+
+	async def send_death_link(self):
+		if self.options['death_link']:
+			await self.send_death()
+
+	def giveResources(self):
+		isNormalMode = self.options['mode'] == 1
+		return self.eosd.giveAllResources(isNormalMode)
+
 async def touhou_6_watcher(ctx: T6Context):
 	"""
 	Client loop, watching the game process.
@@ -200,6 +222,8 @@ async def touhou_6_watcher(ctx: T6Context):
 	resourcesGiven = False
 	bossCurrentHp = 0
 	disconnected = False
+	currentMisses = 0
+	onGoingDeathLink = False
 
 	await ctx.wait_for_initial_connection_info()
 
@@ -225,6 +249,11 @@ async def touhou_6_watcher(ctx: T6Context):
 			ctx.eosd.updateStageList()
 		try:
 			logger.info("Touhou 6 process found. Starting loop...")
+
+			# Activating Death Link
+			if ctx.options['death_link']:
+				await ctx.update_death_link(True)
+
 			while not ctx.exit_event.is_set():
 				await asyncio.sleep(0.5)
 				if(ctx.eosd.gameController.getGameMode() == 2):
@@ -232,9 +261,12 @@ async def touhou_6_watcher(ctx: T6Context):
 					if(currentMode != 2): # A level has started
 						currentMode = 2
 						bossCounter = -1
+						currentMisses = ctx.eosd.gameController.getMisses()
+						onGoingDeathLink = False
+						ctx.pending_death_link = False
 
 					if(not resourcesGiven):
-						ctx.eosd.giveAllResources()
+						ctx.giveResources()
 						resourcesGiven = True
 						currentLives = ctx.eosd.gameController.getLives()
 
@@ -259,14 +291,30 @@ async def touhou_6_watcher(ctx: T6Context):
 						bossCurrentHp = bossTmpHp
 
 					# Death Check
-					if(currentLives != ctx.eosd.gameController.getLives()):
+					# If a death link is sent, we set the flag
+					if ctx.pending_death_link and not onGoingDeathLink:
+						onGoingDeathLink = True
+
+					# If a death has occured in game
+					if currentMisses < ctx.eosd.gameController.getMisses():
+						if not onGoingDeathLink: #Check if it's not by a death link in order to send a death link
+							await ctx.send_death_link()
+						else: # If the player is killed by a death link, we tell the loop it's done
+							onGoingDeathLink = False
+							ctx.pending_death_link = False
+
+						currentMisses += 1
+					elif ctx.pending_death_link: #If no death has occured but a deahth link is pending, we try to kill the player
+						ctx.eosd.gameController.setKill(True)
+						await asyncio.sleep(0.1)
+						ctx.eosd.gameController.setKill(False)
+
+					if(currentLives != ctx.eosd.gameController.getLives()): # We update resources after the life has fully been lost
 						if(currentLives > ctx.eosd.gameController.getLives()):
-							# print("A death has occured")
 							# We give the bombs resources
 							ctx.eosd.giveBombs()
-						# else:
-						# 	print("A 1up has been acquired")
 						currentLives = ctx.eosd.gameController.getLives()
+
 				elif(ctx.eosd.gameController.getGameMode() == 1):
 					# Mode Check
 					if(currentMode != 1): # We enter in the menu
@@ -277,7 +325,8 @@ async def touhou_6_watcher(ctx: T6Context):
 						resourcesGiven = False
 					ctx.eosd.updateStageList()
 				else: # If we're not in a level or a menu, we're probably in the Result Screen
-					pass
+					bossCounter = -1
+
 		except Exception as err:  # Process closed?
 			print(f"ERROR: {err}")
 			disconnected = True
@@ -296,8 +345,6 @@ def connect_to_t6() -> eosdState:
 	return eosd
 
 def launch():
-	# eosd = eosdState()
-	# eosd.loop()
 	"""
 	Launch a client instance (wrapper / args parser)
 	"""

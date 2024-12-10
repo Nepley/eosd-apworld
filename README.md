@@ -10,7 +10,8 @@ Tracker: https://github.com/Nepley/eosd-poptracker
 
 ## Items
 * Characters/Shot Types
-* Next Stage
+* Next Stage (Practice Mode)
+* Continues (Normal Mode)
 * Pack of 25 Power Points
 * Lives
 * Bombs
@@ -19,7 +20,9 @@ Tracker: https://github.com/Nepley/eosd-poptracker
 **Filler**: 1 Power Point
 
 ## Options
-By default, the game except you to be able to finish the game once you unlock the final stage, you can set the resources needed for the stages 3/4 and stages 5/6.<br />
+You can choose if you want to play in practice mode or normal mode. With Practice mode, you play stage by stage individually and need to unlock the stages. In normal mode, you need to finish the game normally with the resources only given at the start.<br />
+In practice mode, by default, the game except you to be able to finish the game once you unlock the final stage, you can set the resources needed for the stages 3/4 and stages 5/6.<br />
+In normal mode, only the resources act as a gate. If you put everything at minimum, the logic consider you can finish at sphere 1.<br />
 You can also choose if you must finish the game with just one character or both of them.
 
 ## How to use
@@ -40,3 +43,4 @@ Here the step for Windows 11:
 * If you go to a character/shot type without any stage, you can still confirm and you will go to stage 1. The game is not supposed to have no stage in practice.
 * When beating Daiyousei in stage 2, the check can be send a little later than normal if ennemies spawn just after defeating her.
 * It's also possible that, sometime, the client will consider a boss beaten while the boss is still alive when the boss go to their next life bar.
+* The demo play can activate the death link if it's active.

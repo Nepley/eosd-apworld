@@ -25,6 +25,7 @@ item_table: Dict[str, T6ItemData] = {
 	"Life":             T6ItemData("Items", 60_000, ItemClassification.progression_skip_balancing, 8),
 	"Bomb":             T6ItemData("Items", 60_001, ItemClassification.progression_skip_balancing, 8),
 	"Lower Difficulty": T6ItemData("Items", 60_002, ItemClassification.progression_skip_balancing, 3),
+	"1 Continue":      T6ItemData("[Normal] Items", 60_016, ItemClassification.useful, 3),
 
 	# Characters
 	"Reimu A - Homing Amulet":     T6ItemData("Characters", 60_003, ItemClassification.progression),

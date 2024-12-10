@@ -2,9 +2,15 @@ from typing import Dict
 
 from Options import Choice, Range, Option, Toggle, DeathLink, DefaultOnToggle, OptionSet
 
-# class RandomizeStageAccess(Toggle):
-#     """If true, unlocking the stage will be randomized, else, you will unlock them by completing the previous stage"""
-#     display_name = "Randomize Access Stage"
+class Mode(Choice):
+    """
+    Practice Mode: You need to unlock the stage in order to progress.
+    Normal Mode: The resources are only given at Stage 1. Add 3 Continues to the Item Pools. Restriction in life, bomb or difficulty for stages 3/4 and 5/6 and character are the only gate. The difficulty is dynamic, meaning that choosing at the start doesn't change the difficulty that you will get
+    """
+    display_name = "Mode played"
+    option_practice = 0
+    option_normal = 1
+    default = 0
 
 class NumberLifeMid(Range):
     """Number of life the randomizer expect you to have before facing Meiling and Patchouli"""
@@ -60,7 +66,7 @@ class EndingRequired(Range):
     default = 1
 
 t6_options: Dict[str, type(Option)] = {
-    # "randomize_stage": RandomizeStageAccess,
+    "mode": Mode,
     "number_life_mid": NumberLifeMid,
     "number_bomb_mid": NumberBombsMid,
     "difficulty_mid": DifficultyMid,
