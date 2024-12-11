@@ -1,4 +1,5 @@
 import pymem
+from .Tools import *
 
 REIMU = 0
 MARISA = 1
@@ -161,6 +162,7 @@ ADDR_KILL_CONDITION = 0x00026DC6
 class eosdController:
 	"""Class accessing the game memory"""
 	gameName = "東方紅魔郷"
+	gameChecksum = "e61b4f4fea3802e926ef307f45166599c3e86555"
 	pm = None
 
 	# Player
@@ -208,7 +210,8 @@ class eosdController:
 	addrKillCondition = None
 
 	def __init__(self):
-		self.pm = pymem.Pymem(self.gameName)
+		pid = find_process_by_checksum(self.gameChecksum)
+		self.pm = pymem.Pymem(pid)
 
 		self.addrStage = self.pm.base_address+ADDR_STAGE
 		self.addrDifficulty = self.pm.base_address+ADDR_DIFFICULTY
