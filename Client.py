@@ -224,6 +224,7 @@ async def touhou_6_watcher(ctx: T6Context):
 	disconnected = False
 	currentMisses = 0
 	onGoingDeathLink = False
+	checkBossCount = 2
 
 	await ctx.wait_for_initial_connection_info()
 
@@ -274,20 +275,26 @@ async def touhou_6_watcher(ctx: T6Context):
 					if(noBoss):
 						bossHpId = ctx.eosd.hasBossSpawn()
 						if(bossHpId != -1):
-							noBoss = False
-							bossCounter += 1
-							# print(f"{ctx.eosd.getBossName(bossCounter)} spawn ({bossHpId})")
-							bossCurrentHp = ctx.eosd.gameController.getHpEnemies()[bossHpId]
+							# If a third boss is found, it's just that there is a problem and we ignore it
+							if bossCounter < 2:
+								noBoss = False
+								bossCounter += 1
+								checkBossCount = 2
+								# print(f"{ctx.eosd.getBossName(bossCounter)} spawn ({bossHpId})")
+								bossCurrentHp = ctx.eosd.gameController.getHpEnemies()[bossHpId]
 					else:
 						bossTmpHp = ctx.eosd.gameController.getHpEnemies()[bossHpId]
 						# If the enemy has more hp than before and it's a huge amount, it mean that the boss has another life bar
 						if (bossTmpHp > bossCurrentHp or bossTmpHp <= 0) and bossTmpHp < 3000:
-							# print(f"{ctx.eosd.getBossName(bossCounter)} has been defeated")
-							if(not ctx.eosd.isCurrentBossDefeated(bossCounter)):
-								ctx.eosd.setbossBeaten(bossCounter)
-								await ctx.update_locations_checked()
-							noBoss = True
-							bossHpId = -1
+							if checkBossCount == 0:
+								# print(f"{ctx.eosd.getBossName(bossCounter)} has been defeated")
+								if(not ctx.eosd.isCurrentBossDefeated(bossCounter)):
+									ctx.eosd.setbossBeaten(bossCounter)
+									await ctx.update_locations_checked()
+								noBoss = True
+								bossHpId = -1
+							else:
+								checkBossCount -= 1
 						bossCurrentHp = bossTmpHp
 
 					# Death Check

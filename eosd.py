@@ -515,13 +515,13 @@ class eosdController:
 		self.pm.write_short(self.addrShotType, newShotType)
 
 	def setLives(self, newLives):
-		self.pm.write_short(self.addrLives, newLives)
+		self.pm.write_bytes(self.addrLives, bytes([newLives]), 1)
 
 	def setBombs(self, newBombs):
-		self.pm.write_short(self.addrBombs, newBombs)
+		self.pm.write_bytes(self.addrBombs, bytes([newBombs]), 1)
 
 	def setPower(self, newPower):
-		self.pm.write_short(self.addrPower, newPower)
+		self.pm.write_bytes(self.addrPower, bytes([newPower]), 1)
 	
 	def setContinues(self, newContinue):
 		self.pm.write_short(self.addrContinues, newContinue)
