@@ -2,6 +2,8 @@ import subprocess
 import os
 import hashlib
 
+process_already_checked_list = []
+
 def calculate_file_checksum(file_path, hash_algorithm="sha1"):
     """Calculate the checksum of a given file."""
     hash_func = hashlib.new(hash_algorithm)
@@ -13,8 +15,7 @@ def calculate_file_checksum(file_path, hash_algorithm="sha1"):
     except (FileNotFoundError, PermissionError):
         return None
 
-def find_process_by_checksum(target_checksum, hash_algorithm="sha1"):
-    """Find a process by matching the checksum of its executable using PowerShell, handling Unicode paths."""
+def get_all_process():
     try:
         # PowerShell command to get all process executable paths and PIDs
         command = [
@@ -24,22 +25,43 @@ def find_process_by_checksum(target_checksum, hash_algorithm="sha1"):
             "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();",
             "Get-Process | Where-Object { $_.Path -ne $null } | Select-Object -Property Id, Path"
         ]
-        
-        # Run the command and ensure the output is captured in UTF-8
-        result = subprocess.check_output(command, universal_newlines=True, encoding="utf-8", errors="replace")
-        
-        for line in result.splitlines():
+
+        result = subprocess.check_output(command, universal_newlines=True, encoding="utf-8", errors="replace", shell=True)
+
+        return result
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+def find_process(name, target_checksum, hash_algorithm="sha1"):
+    process = get_all_process()
+    global process_already_checked_list
+
+    pid_game = None
+    # First check by name
+    for line in process.splitlines():
+         if line.strip() and not line.startswith("Id"):
+            parts = line.strip().split(maxsplit=1)
+            if len(parts) == 2:
+                pid, exe_path = parts
+                exe_path = exe_path.strip()
+                if name in exe_path:
+                    pid_game = int(pid)
+                    break
+
+    # If not found by name, check by checksum
+    if pid_game is None:
+        for line in process.splitlines():
             if line.strip() and not line.startswith("Id"):
                 parts = line.strip().split(maxsplit=1)
                 if len(parts) == 2:
                     pid, exe_path = parts
                     exe_path = exe_path.strip()
                     if os.path.isfile(exe_path):
-                        checksum = calculate_file_checksum(exe_path, hash_algorithm)
-                        if checksum == target_checksum:
-                            print(f"Found process with PID {pid}, Executable: {exe_path}, Checksum: {checksum}")
-                            return int(pid)
-    except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+                        if pid not in process_already_checked_list:
+                            checksum = calculate_file_checksum(exe_path, hash_algorithm)
+                            if checksum == target_checksum:
+                                pid_game = int(pid)
+                            else:
+                                process_already_checked_list.append(pid)
+
+    return pid_game

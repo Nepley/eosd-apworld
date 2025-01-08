@@ -47,25 +47,41 @@ class T6World(World):
         total_locations = len(self.multiworld.get_unfilled_locations(self.player))
         number_placed_item = 0
         mode = getattr(self.options, "mode")
+        extra = getattr(self.options, "extra_stage")
+        goal = getattr(self.options, "goal")
+        shot_type = getattr(self.options, "shot_type")
+
         for name, data in item_table.items():
             quantity = data.max_quantity
 
-            # Categories to be ignored, they will be added in a later stage.
+            # Categories to be ignored, they will be added in a later stage if necessary.
             if data.category == "Filler":
                 continue
 
+            # Will be added manually later
             if data.category == "Endings":
                 continue
 
+            # Ignored if it's not practice mode
             if data.category == "Stages" and mode != 0:
                 continue
 
+            # Ignored if it's not normal mode
             if data.category == "[Normal] Items" and mode != 1:
                 continue
 
+            # Will be added later
             if data.category == "Characters":
                 character_list.append(name)
                 continue
+
+            # If the extra stage is not acitve or separated, we don't add the item
+            if data.category == "Extra Stage" and extra != 2:
+                continue
+
+            # If there is no extra stage or it's separated, we remove one stage in practice mode
+            if data.category == "Stages" and mode == 0 and extra != 1:
+                quantity -= 1
 
             item_pool += [self.create_item(name) for _ in range(0, quantity)]
 
@@ -77,10 +93,36 @@ class T6World(World):
             item_pool += [self.create_item(character) for _ in range(0, 1)]
 
         # Creating and placing Endings
-        ending = self.create_item("Ending")
-        self.multiworld.get_location("[Reimu] Stage 6 Clear", self.player).place_locked_item(ending)
-        self.multiworld.get_location("[Marisa] Stage 6 Clear", self.player).place_locked_item(ending)
-        number_placed_item += 2
+        ending_remilia_reimu = self.create_item("[Reimu] Ending - Remilia")
+        ending_remilia_marisa = self.create_item("[Marisa] Ending - Remilia")
+        ending_flandre_reimu = self.create_item("[Reimu] Ending - Flandre")
+        ending_flandre_marisa = self.create_item("[Marisa] Ending - Flandre")
+
+        # If we have the extra stage and flandre is a potential goal
+        if extra and goal != 0:
+            if shot_type:
+                self.multiworld.get_location("[Reimu A] Stage Extra Clear", self.player).place_locked_item(ending_flandre_reimu)
+                self.multiworld.get_location("[Reimu B] Stage Extra Clear", self.player).place_locked_item(ending_flandre_reimu)
+                self.multiworld.get_location("[Marisa A] Stage Extra Clear", self.player).place_locked_item(ending_flandre_marisa)
+                self.multiworld.get_location("[Marisa B] Stage Extra Clear", self.player).place_locked_item(ending_flandre_marisa)
+                number_placed_item += 4
+            else:
+                self.multiworld.get_location("[Reimu] Stage Extra Clear", self.player).place_locked_item(ending_flandre_reimu)
+                self.multiworld.get_location("[Marisa] Stage Extra Clear", self.player).place_locked_item(ending_flandre_marisa)
+                number_placed_item += 2
+
+        # If Remilia is a potential goal
+        if not extra or goal != 1:
+            if shot_type:
+                self.multiworld.get_location("[Reimu A] Stage 6 Clear", self.player).place_locked_item(ending_remilia_reimu)
+                self.multiworld.get_location("[Reimu B] Stage 6 Clear", self.player).place_locked_item(ending_remilia_reimu)
+                self.multiworld.get_location("[Marisa A] Stage 6 Clear", self.player).place_locked_item(ending_remilia_marisa)
+                self.multiworld.get_location("[Marisa B] Stage 6 Clear", self.player).place_locked_item(ending_remilia_marisa)
+                number_placed_item += 4
+            else:
+                self.multiworld.get_location("[Reimu] Stage 6 Clear", self.player).place_locked_item(ending_remilia_reimu)
+                self.multiworld.get_location("[Marisa] Stage 6 Clear", self.player).place_locked_item(ending_remilia_marisa)
+                number_placed_item += 2
 
         # Fill any empty locations with filler items.
         while len(item_pool) + number_placed_item < total_locations:
@@ -101,4 +143,4 @@ class T6World(World):
         set_rules(self.multiworld, self.player)
 
     def create_regions(self):
-        create_regions(self.multiworld, self.player)
+        create_regions(self.multiworld, self.player, self.options)

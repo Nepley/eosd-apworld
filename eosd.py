@@ -17,6 +17,7 @@ ADDR_CHARACTER = 0x0029d4bd
 ADDR_SHOT_TYPE = 0x0029d4be
 
 ADDR_HP_ENEMY = [0x000B957C, 0x000BA444, 0x000BB30C, 0x000BC1D4, 0x000BD09C, 0x000BDF64, 0x000BEE2C, 0x000BFCF4, 0x000C0BBC, 0x000C1A84, 0x000C294C, 0x000C3814, 0x000C55A4, 0x000C7334]
+ADDR_IS_BOSS_PRESENT = 0x0029BC50 # 0 = No boss / 1 = Boss present
 
 ADDR_LIVES = 0x0029D4BA
 ADDR_BOMBS = 0x0029D4BB
@@ -46,6 +47,12 @@ ADDR_MARISA_B_EASY = 0x0029CD29
 ADDR_MARISA_B_NORMAL = 0x0029CD2A
 ADDR_MARISA_B_HARD = 0x0029CD2B
 ADDR_MARISA_B_LUNATIC = 0x0029CD2C
+
+# Extra stage access
+ADDR_REIMU_A_EXTRA = 0x0029CCDE
+ADDR_REIMU_B_EXTRA = 0x0029CCF6
+ADDR_MARISA_A_EXTRA = 0x0029CD0E
+ADDR_MARISA_B_EXTRA = 0x0029CD26
 
 # Practice stage score
 ADDR_REIMU_A_EASY_SCORE_1 = 0x0029CD3C
@@ -201,16 +208,23 @@ class eosdController:
 	addrMarisaBHard = None
 	addrMarisaBLunatic = None
 
+	# Extra stage access
+	addrReimuAExtra = None
+	addrReimuBExtra = None
+	addrMarisaAExtra = None
+	addrMarisaBExtra = None
+
 	# Practice stage score
 	addrPracticeScore = None
 
 	# Other
 	addrGameMode = None
 	addrHpEnemies = None
+	addrIsBossPresent = None
 	addrKillCondition = None
 
 	def __init__(self):
-		pid = find_process_by_checksum(self.gameChecksum)
+		pid = find_process(self.gameName, self.gameChecksum)
 		self.pm = pymem.Pymem(pid)
 
 		self.addrStage = self.pm.base_address+ADDR_STAGE
@@ -245,7 +259,13 @@ class eosdController:
 		self.addrMarisaBHard = self.pm.base_address+ADDR_MARISA_B_HARD
 		self.addrMarisaBLunatic = self.pm.base_address+ADDR_MARISA_B_LUNATIC
 
+		self.addrReimuAExtra = self.pm.base_address+ADDR_REIMU_A_EXTRA
+		self.addrReimuBExtra = self.pm.base_address+ADDR_REIMU_B_EXTRA
+		self.addrMarisaAExtra = self.pm.base_address+ADDR_MARISA_A_EXTRA
+		self.addrMarisaBExtra = self.pm.base_address+ADDR_MARISA_B_EXTRA
+
 		self.addrGameMode = self.pm.base_address+ADDR_GAME_MODE
+		self.addrIsBossPresent = self.pm.base_address+ADDR_IS_BOSS_PRESENT
 		self.addrHpEnemies = []
 		for addr in ADDR_HP_ENEMY:
 			self.addrHpEnemies.append(self.pm.base_address+addr)
@@ -435,10 +455,10 @@ class eosdController:
 
 	def getPower(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrPower, 1))
-	
+
 	def getMisses(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrMisses, 1))
-	
+
 	def getContinues(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrContinues, 1))
 
@@ -454,6 +474,9 @@ class eosdController:
 	def getReimuALunatic(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrReimuALunatic, 1))
 
+	def getReimuAExtra(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrReimuAExtra, 1))
+
 	def getReimuBEasy(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrReimuBEasy, 1))
 
@@ -465,6 +488,9 @@ class eosdController:
 
 	def getReimuBLunatic(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrReimuBLunatic, 1))
+
+	def getReimuBExtra(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrReimuBExtra, 1))
 
 	def getMarisaAEasy(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrMarisaAEasy, 1))
@@ -478,6 +504,9 @@ class eosdController:
 	def getMarisaALunatic(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrMarisaALunatic, 1))
 
+	def getMarisaAExtra(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrMarisaAExtra, 1))
+
 	def getMarisaBEasy(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrMarisaBEasy, 1))
 
@@ -490,6 +519,9 @@ class eosdController:
 	def getMarisaBLunatic(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrMarisaBLunatic, 1))
 
+	def getMarisaBExtra(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrMarisaBExtra, 1))
+
 	def getGameMode(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrGameMode, 1))
 
@@ -498,7 +530,10 @@ class eosdController:
 		for addr in self.addrHpEnemies:
 			result.append(self.pm.read_int(addr))
 		return result
-	
+
+	def getIsBossPresent(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrIsBossPresent, 1))
+
 	def getPracticeStageScore(self, characterId, shotId, difficultyId, stageId):
 		return int.from_bytes(self.pm.read_bytes(self.addrPracticeScore[characterId][shotId][difficultyId][stageId], 4))
 
@@ -522,7 +557,7 @@ class eosdController:
 
 	def setPower(self, newPower):
 		self.pm.write_bytes(self.addrPower, bytes([newPower]), 1)
-	
+
 	def setContinues(self, newContinue):
 		self.pm.write_short(self.addrContinues, newContinue)
 
@@ -541,6 +576,9 @@ class eosdController:
 	def setReimuALunatic(self, newReimuALunatic):
 		self.pm.write_int(self.addrReimuALunatic, newReimuALunatic)
 
+	def setReimuAExtra(self, newReimuAExtra):
+		self.pm.write_bytes(self.addrReimuAExtra, bytes([newReimuAExtra]), 1)
+
 	def setReimuBEasy(self, newReimuBEasy):
 		self.pm.write_int(self.addrReimuBEasy, newReimuBEasy)
 
@@ -552,6 +590,9 @@ class eosdController:
 
 	def setReimuBLunatic(self, newReimuBLunatic):
 		self.pm.write_int(self.addrReimuBLunatic, newReimuBLunatic)
+
+	def setReimuBExtra(self, newReimuBExtra):
+		self.pm.write_bytes(self.addrReimuBExtra, bytes([newReimuBExtra]), 1)
 
 	def setMarisaAEasy(self, newMarisaAEasy):
 		self.pm.write_int(self.addrMarisaAEasy, newMarisaAEasy)
@@ -565,6 +606,9 @@ class eosdController:
 	def setMarisaALunatic(self, newMarisaALunatic):
 		self.pm.write_int(self.addrMarisaALunatic, newMarisaALunatic)
 
+	def setMarisaAExtra(self, newMarisaAExtra):
+		self.pm.write_bytes(self.addrMarisaAExtra, bytes([newMarisaAExtra]), 1)
+
 	def setMarisaBEasy(self, newMarisaBEasy):
 		self.pm.write_int(self.addrMarisaBEasy, newMarisaBEasy)
 
@@ -576,6 +620,9 @@ class eosdController:
 
 	def setMarisaBLunatic(self, newMarisaBLunatic):
 		self.pm.write_int(self.addrMarisaBLunatic, newMarisaBLunatic)
+
+	def setMarisaBExtra(self, newMarisaBExtra):
+		self.pm.write_bytes(self.addrMarisaBExtra, bytes([newMarisaBExtra]), 1)
 
 	def resetHpEnemies(self):
 		for addr in self.addrHpEnemies:
@@ -595,7 +642,8 @@ class eosdState:
 	lives = None
 	bombs = None
 	power = None
-	endings = None
+	endingRemilia = None
+	endingFlandre = None
 	stages = None
 	continues = None
 
@@ -603,6 +651,7 @@ class eosdState:
 	hasHard = None
 	hasNormal = None
 	hasEasy = None
+	hasExtra = None
 
 	hasReimuA = None
 	hasReimuB = None
@@ -612,13 +661,15 @@ class eosdState:
 	gameController = None
 
 	bossBeaten = []
+	extraBeaten = []
 
 	def __init__(self):
 		# Default Value
 		self.lives = 0
 		self.bombs = 0
 		self.power = 0
-		self.endings = 0
+		self.endingRemilia = [0, 0]
+		self.endingFlandre = [0, 0]
 		self.stages = 1
 		self.continues = 0
 
@@ -626,6 +677,7 @@ class eosdState:
 		self.hasHard = False
 		self.hasNormal = False
 		self.hasEasy = False
+		self.hasExtra = [[False, False], [False, False,]]
 
 		self.hasReimuA = False
 		self.hasReimuB = False
@@ -775,6 +827,16 @@ class eosdState:
 			]
 		]
 
+		self.extraBeaten = [
+				[
+					[False, False],
+					[False, False]
+				],
+				[
+					[False, False],
+					[False, False]
+				]
+			]
 		self.gameController = eosdController()
 
 	def hasBossSpawn(self):
@@ -817,7 +879,7 @@ class eosdState:
 			self.giveContinues()
 			self.setDifficulty(True)
 
-	def updateStageList(self):
+	def updateStageList(self, updateExtra = False):
 		if(self.hasReimuA):
 			if(self.hasEasy):
 				self.gameController.setReimuAEasy(self.stages)
@@ -837,12 +899,20 @@ class eosdState:
 			if(self.hasLunatic):
 				self.gameController.setReimuALunatic(self.stages)
 			else:
-				self.gameController.setReimuALunatic(0)			
+				self.gameController.setReimuALunatic(0)
+
+			if updateExtra:
+				if self.hasExtra[REIMU][SHOT_A]:
+					self.gameController.setReimuAExtra(99)
+				else:
+					self.gameController.setReimuAExtra(0)
 		else:
 			self.gameController.setReimuAEasy(0)
 			self.gameController.setReimuANormal(0)
 			self.gameController.setReimuAHard(0)
 			self.gameController.setReimuALunatic(0)
+			if updateExtra:
+				self.gameController.setReimuAExtra(0)
 
 		if(self.hasReimuB):
 			if(self.hasEasy):
@@ -863,12 +933,20 @@ class eosdState:
 			if(self.hasLunatic):
 				self.gameController.setReimuBLunatic(self.stages)
 			else:
-				self.gameController.setReimuBLunatic(0)		
+				self.gameController.setReimuBLunatic(0)
+
+			if updateExtra:
+				if self.hasExtra[REIMU][SHOT_B]:
+					self.gameController.setReimuBExtra(99)
+				else:
+					self.gameController.setReimuBExtra(0)
 		else:
 			self.gameController.setReimuBEasy(0)
 			self.gameController.setReimuBNormal(0)
 			self.gameController.setReimuBHard(0)
 			self.gameController.setReimuBLunatic(0)
+			if updateExtra:
+				self.gameController.setReimuBExtra(0)
 
 		if(self.hasMarisaA):
 			if(self.hasEasy):
@@ -889,12 +967,20 @@ class eosdState:
 			if(self.hasLunatic):
 				self.gameController.setMarisaALunatic(self.stages)
 			else:
-				self.gameController.setMarisaALunatic(0)		
+				self.gameController.setMarisaALunatic(0)
+
+			if updateExtra:
+				if self.hasExtra[MARISA][SHOT_A]:
+					self.gameController.setMarisaAExtra(99)
+				else:
+					self.gameController.setMarisaAExtra(0)
 		else:
 			self.gameController.setMarisaAEasy(0)
 			self.gameController.setMarisaANormal(0)
 			self.gameController.setMarisaAHard(0)
 			self.gameController.setMarisaALunatic(0)
+			if updateExtra:
+				self.gameController.setMarisaAExtra(0)
 
 		if(self.hasMarisaB):
 			if(self.hasEasy):
@@ -916,51 +1002,117 @@ class eosdState:
 				self.gameController.setMarisaBLunatic(self.stages)
 			else:
 				self.gameController.setMarisaBLunatic(0)
+
+			if updateExtra:
+				if self.hasExtra[MARISA][SHOT_B]:
+					self.gameController.setMarisaBExtra(99)
+				else:
+					self.gameController.setMarisaBExtra(0)
 		else:
 			self.gameController.setMarisaBEasy(0)
 			self.gameController.setMarisaBNormal(0)
 			self.gameController.setMarisaBHard(0)
 			self.gameController.setMarisaBLunatic(0)
+			if updateExtra:
+				self.gameController.setMarisaBExtra(0)
 
-		self.updatePracticeScore()
+	def updatePracticeScore(self, shot_type = False, difficulty = False):
+		if difficulty:
+			if shot_type:
+				for difficulty in range(4):
+					for character in range(2):
+						for shot in range(2):
+							for stage in range(6):
+								score = 0
+								if self.isBossBeaten(character, stage, 1, shot, difficulty):
+									score = 999999999
+								elif self.isBossBeaten(character, stage, 0, shot, difficulty):
+									score = 555555555
 
-	def updatePracticeScore(self, levelOfSeparation = 0):
-		"""
-		0: By character
-		1: By shot type
-		2: By Difficulty
-		"""
+								# Easy mode has no stage 6
+								if stage < 5 or difficulty != 0:
+									self.gameController.setPracticeStageScore(character, shot, difficulty, stage, score)
+			else:
+				for difficulty in range(4):
+					for character in range(2):
+						for stage in range(6):
+							score = 0
+							if self.isBossBeaten(character, stage, 1, -1, difficulty):
+								score = 999999999
+							elif self.isBossBeaten(character, stage, 0, -1, difficulty):
+								score = 555555555
 
-		for character in range(2):
-			for stage in range(6):
-				score = 0
-				if self.isBossBeaten(character, stage, 1):
-					score = 999999999
-				elif self.isBossBeaten(character, stage, 0):
-					score = 555555555
+							# Easy mode has no stage 6
+							if stage < 5 or difficulty != 0:
+								self.gameController.setPracticeStageScore(character, SHOT_A, difficulty, stage, score)
+								self.gameController.setPracticeStageScore(character, SHOT_B, difficulty, stage, score)
+		else:
+			if shot_type:
+				for character in range(2):
+					for shot in range(2):
+						for stage in range(6):
+							score = 0
+							if self.isBossBeaten(character, stage, 1, shot):
+								score = 999999999
+							elif self.isBossBeaten(character, stage, 0, shot):
+								score = 555555555
 
-				# Easy mode has no stage 6
-				if stage < 5:
-					self.gameController.setPracticeStageScore(character, SHOT_A, EASY, stage, score)
-					self.gameController.setPracticeStageScore(character, SHOT_B, EASY, stage, score)
+							# Easy mode has no stage 6
+							if stage < 5:
+								self.gameController.setPracticeStageScore(character, shot, EASY, stage, score)
 
-				self.gameController.setPracticeStageScore(character, SHOT_A, NORMAL, stage, score)
-				self.gameController.setPracticeStageScore(character, SHOT_A, HARD, stage, score)
-				self.gameController.setPracticeStageScore(character, SHOT_A, LUNATIC, stage, score)
+							self.gameController.setPracticeStageScore(character, shot, NORMAL, stage, score)
+							self.gameController.setPracticeStageScore(character, shot, HARD, stage, score)
+							self.gameController.setPracticeStageScore(character, shot, LUNATIC, stage, score)
+			else:
+				for character in range(2):
+					for stage in range(6):
+						score = 0
+						if self.isBossBeaten(character, stage, 1):
+							score = 999999999
+						elif self.isBossBeaten(character, stage, 0):
+							score = 555555555
 
-				self.gameController.setPracticeStageScore(character, SHOT_B, NORMAL, stage, score)
-				self.gameController.setPracticeStageScore(character, SHOT_B, HARD, stage, score)
-				self.gameController.setPracticeStageScore(character, SHOT_B, LUNATIC, stage, score)
+						# Easy mode has no stage 6
+						if stage < 5:
+							self.gameController.setPracticeStageScore(character, SHOT_A, EASY, stage, score)
+							self.gameController.setPracticeStageScore(character, SHOT_B, EASY, stage, score)
+
+						self.gameController.setPracticeStageScore(character, SHOT_A, NORMAL, stage, score)
+						self.gameController.setPracticeStageScore(character, SHOT_A, HARD, stage, score)
+						self.gameController.setPracticeStageScore(character, SHOT_A, LUNATIC, stage, score)
+
+						self.gameController.setPracticeStageScore(character, SHOT_B, NORMAL, stage, score)
+						self.gameController.setPracticeStageScore(character, SHOT_B, HARD, stage, score)
+						self.gameController.setPracticeStageScore(character, SHOT_B, LUNATIC, stage, score)
 
 	#
 	# Boss
 	#
 
 	def isCurrentBossDefeated(self, counter):
-		return self.bossBeaten[self.gameController.getCharacter()][self.gameController.getShotType()][self.gameController.getDifficulty()][self.gameController.getStage()-1][counter]
+		isDefeated = False
+		if self.gameController.getStage() == 7:
+			isDefeated = self.extraBeaten[self.gameController.getCharacter()][self.gameController.getShotType()][counter]
+		else:
+			isDefeated = self.bossBeaten[self.gameController.getCharacter()][self.gameController.getShotType()][self.gameController.getDifficulty()][self.gameController.getStage()-1][counter]
 
-	def setbossBeaten(self, counter):
-		self.bossBeaten[self.gameController.getCharacter()][self.gameController.getShotType()][self.gameController.getDifficulty()][self.gameController.getStage()-1][counter] = True
+		return isDefeated
+
+	def setbossBeaten(self, counter, otherDifficulties = False):
+		if self.gameController.getStage() == 7:
+			self.extraBeaten[self.gameController.getCharacter()][self.gameController.getShotType()][counter] = True
+		else:
+			self.bossBeaten[self.gameController.getCharacter()][self.gameController.getShotType()][self.gameController.getDifficulty()][self.gameController.getStage()-1][counter] = True
+			if otherDifficulties:
+				if self.hasEasy:
+					self.bossBeaten[self.gameController.getCharacter()][self.gameController.getShotType()][0][self.gameController.getStage()-1][counter] = True
+				if self.hasNormal and self.gameController.getDifficulty() >= 1:
+					self.bossBeaten[self.gameController.getCharacter()][self.gameController.getShotType()][1][self.gameController.getStage()-1][counter] = True
+				if self.hasHard and self.gameController.getDifficulty() >= 2:
+					self.bossBeaten[self.gameController.getCharacter()][self.gameController.getShotType()][2][self.gameController.getStage()-1][counter] = True
+				if self.hasLunatic and self.gameController.getDifficulty() >= 3:
+					self.bossBeaten[self.gameController.getCharacter()][self.gameController.getShotType()][3][self.gameController.getStage()-1][counter] = True
 
 	def getBossName(self, counter):
 		bossName = [
@@ -969,17 +1121,33 @@ class eosdState:
 			["Meiling - MidBoss", "Meiling - Boss"],
 			["Koakuma", "Patchouli"],
 			["Sakuya - MidBoss 1", "Sakuya - Boss"],
-			["Sakuya - MidBoss 2", "Remilia"]
+			["Sakuya - MidBoss 2", "Remilia"],
+			["Patchouli - MidBoss", "Flandre"]
 		]
 
 		return bossName[self.gameController.getStage()-1][counter]
 
-	def isBossBeaten(self, character, stage, counter, shot_type = -1, difficutly = -1):
-		if difficutly >= 0 and difficutly < 5:
+	def isBossBeaten(self, character, stage, counter, shot_type = -1, difficulty = -1):
+		if difficulty >= 0 and difficulty < 4:
 			flags = [
-				self.bossBeaten[character][0][difficutly][stage][counter],
-				self.bossBeaten[character][1][difficutly][stage][counter],
-			]
+					self.bossBeaten[character][0][difficulty][stage][counter],
+					self.bossBeaten[character][1][difficulty][stage][counter],
+				]
+		elif stage == 6: # Extra Stage
+			if shot_type == 0 or shot_type == 1:
+				if shot_type == 0:
+					flags = [
+						self.extraBeaten[character][0][counter],
+					]
+				else:
+					flags = [
+						self.extraBeaten[character][1][counter],
+					]
+			else:
+				flags = [
+					self.extraBeaten[character][0][counter],
+					self.extraBeaten[character][1][counter],
+				]
 		else:
 			flags = [
 				self.bossBeaten[character][0][0][stage][counter],
@@ -992,26 +1160,20 @@ class eosdState:
 				self.bossBeaten[character][1][3][stage][counter],
 			]
 
-		if shot_type == 0 or shot_type == 1:
-			if shot_type == 0:
-				if difficutly >= 0 and difficutly < 5:
-					flags = [flags[0]]
+		if stage < 6:
+			if shot_type == 0 or shot_type == 1:
+				if shot_type == 0:
+					if difficulty >= 0 and difficulty < 5:
+						flags = [flags[0]]
+					else:
+						flags = flags[:4]
 				else:
-					flags = flags[:3]
-			else:
-				if difficutly >= 0 and difficutly < 5:
-					flags = [flags[1]]
-				else:
-					flags = flags[-4:]
+					if difficulty >= 0 and difficulty < 5:
+						flags = [flags[1]]
+					else:
+						flags = flags[-4:]
 
-		isBeaten = False
-
-		for flag in flags:
-			if flag:
-				isBeaten = True
-				break
-
-		return isBeaten
+		return True if True in flags else False
 
 	#
 	# Get Items Functions
@@ -1075,7 +1237,7 @@ class eosdState:
 				self.gameController.setPower(self.gameController.getPower() + 25)
 			else:
 				self.gameController.setPower(128)
-	
+
 	def addStage(self):
 		if(self.stages < 6):
 			self.stages += 1
@@ -1084,8 +1246,11 @@ class eosdState:
 		if(self.continues < 3):
 			self.continues += 1
 
-	def addEnding(self):
-		self.endings += 1
+	def addEndingRemilia(self, character):
+		self.endingRemilia[character] += 1
+
+	def addEndingFlandre(self, character):
+		self.endingFlandre[character] += 1
 
 	def unlockDifficulty(self, difficulty, update = False):
 		if(difficulty == 0):
@@ -1100,6 +1265,18 @@ class eosdState:
 		if update:
 			self.setDifficulty(True)
 
+	def unlockExtraStage(self, character =-1, shot_type = -1):
+		# Unlock for one character/shot type
+		if character > -1 and shot_type > -1:
+			self.hasExtra[character][shot_type] = True
+		# Unlock for one character
+		elif character > -1:
+			self.hasExtra[character][SHOT_A] = True
+			self.hasExtra[character][SHOT_B] = True
+		# Unlock for all characters
+		else:
+			self.hasExtra = [[True, True], [True, True]]
+
 	def unlockCharacter(self, character):
 		if(character == 0):
 			self.hasReimuA = True
@@ -1109,9 +1286,34 @@ class eosdState:
 			self.hasMarisaA = True
 		elif(character == 3):
 			self.hasMarisaB = True
-			
-	def reconnect(self):
+
+	#
+	# Other
+	#
+
+	def connect(self):
 		try:
 			self.gameController = eosdController()
 		except Exception as err:
 			self.gameController = None
+
+	def reset(self):
+		# Default Value
+		self.lives = 0
+		self.bombs = 0
+		self.power = 0
+		self.endingRemilia = [0, 0]
+		self.endingFlandre = [0, 0]
+		self.stages = 1
+		self.continues = 0
+
+		self.hasLunatic = True
+		self.hasHard = False
+		self.hasNormal = False
+		self.hasEasy = False
+		self.hasExtra = [[False, False], [False, False,]]
+
+		self.hasReimuA = False
+		self.hasReimuB = False
+		self.hasMarisaA = False
+		self.hasMarisaB = False

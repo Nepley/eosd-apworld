@@ -58,12 +58,51 @@ class DifficultyEnd(Choice):
     option_easy = 3
     default = 0
 
-class EndingRequired(Range):
-    """How many ending is required to finish the game"""
-    display_name = "How many ending is required to finish the game"
-    range_start = 1
-    range_end = 2
-    default = 1
+class ExtraStage(Choice):
+    """Determine if the extra stage is included and therefore, be the final stage"""
+    display_name = "Determine if the extra stage is included and therefore, be the final stage"
+    option_exclude = 0
+    option_include_linear = 1
+    option_include_apart = 2
+    default = 0
+
+class NumberLifeExtra(Range):
+    """Number of life the randomizer expect you to have before facing Flandre"""
+    display_name = "Number of life expected in order to face Flandre"
+    range_start = 0
+    range_end = 8
+    default = 0
+
+class NumberBombsExtra(Range):
+    """Number of bombs the randomizer expect you to have before facing Flandre"""
+    display_name = "Number of bombs expected in order to face Flandre"
+    range_start = 0
+    range_end = 8
+    default = 0
+
+class ShotTypeCheck(Toggle):
+    """"If each shot type have their own check and are not just separated by character"""
+    display_name = "Shot Type Check"
+
+class DifficultyCheck(Toggle):
+    """If checks are separated by difficulty. The check of the highest difficulty include the check of the lower difficulties that are unlocked"""
+    display_name = "Difficulty Check"
+
+class Goal(Choice):
+    """If the Extra Stage is included, determine which boss is the goal."""
+    display_name = "Goal"
+    option_remilia = 0
+    option_flandre = 1
+    option_both = 2
+    default = 0
+
+class EndingRequired(Choice):
+    """How many time do you need to beat the required boss"""
+    display_name = "How many time do you need to beat the required boss"
+    option_once = 0
+    option_both_characters = 1
+    option_all_shot_types = 2
+    default = 0
 
 t6_options: Dict[str, type(Option)] = {
     "mode": Mode,
@@ -73,6 +112,12 @@ t6_options: Dict[str, type(Option)] = {
     "number_life_end": NumberLifeEnd,
     "number_bomb_end": NumberBombsEnd,
     "difficulty_end": DifficultyEnd,
+    "extra_stage": ExtraStage,
+    "number_life_extra": NumberLifeExtra,
+    "number_bomb_extra": NumberBombsExtra,
+    "shot_type": ShotTypeCheck,
+    "difficulty_check": DifficultyCheck,
+    "goal": Goal,
     "ending_required": EndingRequired,
     "death_link": DeathLink,
 }

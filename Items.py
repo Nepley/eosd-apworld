@@ -25,7 +25,7 @@ item_table: Dict[str, T6ItemData] = {
 	"Life":             T6ItemData("Items", 60_000, ItemClassification.progression_skip_balancing, 8),
 	"Bomb":             T6ItemData("Items", 60_001, ItemClassification.progression_skip_balancing, 8),
 	"Lower Difficulty": T6ItemData("Items", 60_002, ItemClassification.progression_skip_balancing, 3),
-	"1 Continue":      T6ItemData("[Normal] Items", 60_016, ItemClassification.useful, 3),
+	"1 Continue":       T6ItemData("[Normal] Items", 60_016, ItemClassification.useful, 3),
 
 	# Characters
 	"Reimu A - Homing Amulet":     T6ItemData("Characters", 60_003, ItemClassification.progression),
@@ -34,9 +34,15 @@ item_table: Dict[str, T6ItemData] = {
 	"Marisa B - Illusion Laser":   T6ItemData("Characters", 60_006, ItemClassification.progression),
 
 	# Others
-	"Next Stage":     T6ItemData("Stages", 60_013, ItemClassification.progression_skip_balancing, 5),
-	"Ending":         T6ItemData("Endings", 60_014, ItemClassification.progression, 2),
-	"25 Power Point": T6ItemData("Power Point", 60_015, ItemClassification.useful, 5),
+	"Next Stage":     				T6ItemData("Stages", 60_013, ItemClassification.progression_skip_balancing, 6),
+	"25 Power Point": 				T6ItemData("Power Point", 60_015, ItemClassification.useful, 5),
+	"Extra Stage":    				T6ItemData("Extra Stage", 60_017, ItemClassification.progression_skip_balancing),
+
+	# Endings
+	"[Reimu] Ending - Remilia":     T6ItemData("Endings", 60_014, ItemClassification.progression, 2),
+	"[Marisa] Ending - Remilia":    T6ItemData("Endings", 60_018, ItemClassification.progression, 2),
+	"[Reimu] Ending - Flandre":     T6ItemData("Endings", 60_019, ItemClassification.progression, 2),
+	"[Marisa] Ending - Flandre":    T6ItemData("Endings", 60_020, ItemClassification.progression, 2),
 
 	# Junk
 	"1 Power Point": T6ItemData("Filler", 60_030),
