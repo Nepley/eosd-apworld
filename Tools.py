@@ -1,6 +1,8 @@
 import subprocess
 import os
 import hashlib
+import time
+from tkinter.filedialog import askopenfilename
 
 process_already_checked_list = []
 
@@ -31,6 +33,12 @@ def get_all_process():
         return result
     except Exception as e:
         print(f"Unexpected error: {e}")
+
+def open_manually_process():
+    filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
+    p = subprocess.Popen(filename)
+    time.sleep(1)
+    return p.pid
 
 def find_process(name, target_checksum, hash_algorithm="sha1"):
     process = get_all_process()
@@ -63,5 +71,8 @@ def find_process(name, target_checksum, hash_algorithm="sha1"):
                                 pid_game = int(pid)
                             else:
                                 process_already_checked_list.append(pid)
+
+    if pid_game is None:
+        pid_game = open_manually_process()
 
     return pid_game
