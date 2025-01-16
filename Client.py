@@ -142,7 +142,7 @@ class T6Context(CommonContext):
 					if self.checkVictory():
 						await self.send_msgs([{"cmd": 'StatusUpdate', "status": 30}])
 				case 60019 | 60020: # Ending Flandre
-					character = REIMU if item.item == 60014 else MARISA
+					character = REIMU if item.item == 60019 else MARISA
 					self.eosd.addEndingFlandre(character)
 					if self.checkVictory():
 						await self.send_msgs([{"cmd": 'StatusUpdate', "status": 30}])
