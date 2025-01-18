@@ -799,6 +799,7 @@ async def touhou_6_watcher(ctx: T6Context):
 					if(currentMode != 2): # A level has started
 						currentMode = 2
 						bossCounter = -1
+						bossPresent = False
 						currentMisses = ctx.eosd.gameController.getMisses()
 						onGoingDeathLink = False
 						ctx.pending_death_link = False
@@ -866,8 +867,8 @@ async def touhou_6_watcher(ctx: T6Context):
 					# Mode Check
 					if(currentMode != 1): # We enter in the menu
 						ctx.eosd.gameController.resetHpEnemies()
+						ctx.eosd.gameController.resetBossPresent()
 						currentMode = 1
-						bossPresent = False
 						resourcesGiven = False
 						if hasDied:
 							await ctx.send_death_link()

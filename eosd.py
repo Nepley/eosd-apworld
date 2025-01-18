@@ -628,6 +628,9 @@ class eosdController:
 		for addr in self.addrHpEnemies:
 			self.pm.write_int(addr, 0)
 
+	def resetBossPresent(self):
+		self.pm.write_bytes(self.addrIsBossPresent, bytes([0]), 1)
+
 	def setPracticeStageScore(self, characterId, shotId, difficultyId, stageId, newScore):
 		return self.pm.write_int(self.addrPracticeScore[characterId][shotId][difficultyId][stageId], newScore)
 
