@@ -36,6 +36,7 @@ class T6Context(CommonContext):
 
 		self.options = None
 		self.otherDifficulties = True
+		self.ExtraMenu = False
 
 	async def server_auth(self, password_requested: bool = False):
 		if password_requested and not self.password:
@@ -157,6 +158,9 @@ class T6Context(CommonContext):
 					self.eosd.add1Power()
 				case _:
 					print(f"[EOSD] Unknown Item: {item}")
+
+		# Update the stage list
+		self.eosd.updateStageList()
 
 	async def update_locations_checked(self):
 		"""
@@ -703,11 +707,10 @@ class T6Context(CommonContext):
 		return self.eosd.giveAllResources(isNormalMode)
 
 	def updateStageList(self):
-		isPracticeMode = self.options['mode'] == 0
 		shot_type = self.options['shot_type']
 		difficulty_check = self.options['difficulty_check']
 
-		self.eosd.updateStageList(isPracticeMode)
+		self.eosd.updateStageList()
 		self.eosd.updatePracticeScore(shot_type, difficulty_check)
 
 	def checkVictory(self):
@@ -744,6 +747,45 @@ class T6Context(CommonContext):
 
 		return victory
 
+	async def extra_unlock_loop(self):
+		while True:
+			if self.eosd.gameController.getGameMode() == 1:
+				menu = self.eosd.gameController.getMenu()
+				# We check where we are in the menu in order to determine how we lock/unlock the characters
+				if menu in [0, 18]  or self.eosd.gameController.getDifficulty() == 4:
+					self.ExtraMenu = True
+				elif menu in [6] or self.eosd.gameController.getDifficulty() < 4:
+					self.ExtraMenu = False
+
+				self.eosd.updateExtraUnlock(not self.ExtraMenu)
+			await asyncio.sleep(0.1)
+
+	async def difficulty_cursor_loop(self):
+		while True:
+			if  self.eosd.gameController.getMenu() == 6:
+				self.eosd.checkCursor()
+				await asyncio.sleep(0.05)
+			else:
+				await asyncio.sleep(0.1)
+
+	async def connect_to_eosd(self):
+		self.eosd = None
+
+		while not self.eosd:
+			pid = await find_process()
+			if pid:
+				self.eosd = eosdState(pid)
+			await asyncio.sleep(2)
+
+	async def reconnect_to_eosd(self):
+		self.eosd.gameController = None
+
+		while not self.eosd.gameController:
+			pid = await find_process()
+			if pid:
+				self.eosd.gameController = eosdController(pid)
+			await asyncio.sleep(2)
+
 async def touhou_6_watcher(ctx: T6Context):
 	"""
 	Client loop, watching the game process.
@@ -770,31 +812,45 @@ async def touhou_6_watcher(ctx: T6Context):
 			# client disconnected from server
 			await ctx.wait_for_initial_connection_info()
 		# First connection
-		if ctx.eosd is None:
+		if ctx.eosd is None and not disconnected:
 			logger.info("Waiting for connection to Touhou 6...")
-			ctx.eosd = connect_to_t6()
+			asyncio.create_task(ctx.connect_to_eosd())
 			while(ctx.eosd is None and not ctx.exit_event.is_set()):
-				await asyncio.sleep(2)
-				ctx.eosd = connect_to_t6()
+				await asyncio.sleep(1)
 		# Connection following an error
 		if disconnected:
 			logger.info("Connection lost. Waiting for connection to Touhou 6...")
-			ctx.eosd.connect()
+			asyncio.create_task(ctx.reconnect_to_eosd())
 			while(ctx.eosd.gameController is None and not ctx.exit_event.is_set()):
-				await asyncio.sleep(2)
-				ctx.eosd.connect()
+				await asyncio.sleep(1)
 			disconnected = False
 			ctx.updateStageList()
 		try:
-			logger.info("Touhou 6 process found. Starting loop...")
+			if ctx.eosd:
+				logger.info("Touhou 6 process found. Starting loop...")
+
+			# We start the loop for the extra menu and the difficulty cursor in tasks since they need to be faster
+			asyncio.create_task(ctx.extra_unlock_loop())
+			asyncio.create_task(ctx.difficulty_cursor_loop())
 
 			# Activating Death Link
 			if ctx.options['death_link']:
 				await ctx.update_death_link(True)
 
+			# We set the lock for all the difficulty
+			ctx.eosd.gameController.setLockToAllDifficulty()
+
 			while not ctx.exit_event.is_set():
 				await asyncio.sleep(0.5)
-				if(ctx.eosd.gameController.getGameMode() == 2):
+				gameMode = ctx.eosd.gameController.getGameMode()
+				inDemo = ctx.eosd.gameController.getInDemo()
+
+				# If we're in the demo, we reset the mode so that the variables in the menu can be reset correctly
+				if inDemo == 1:
+					currentMode = 0
+					continue
+
+				if(gameMode == 2):
 					# Mode Check
 					if(currentMode != 2): # A level has started
 						currentMode = 2
@@ -863,7 +919,7 @@ async def touhou_6_watcher(ctx: T6Context):
 						if deathCounter <= 0:
 							hasDied = False
 
-				elif(ctx.eosd.gameController.getGameMode() == 1):
+				elif(gameMode == 1):
 					# Mode Check
 					if(currentMode != 1): # We enter in the menu
 						ctx.eosd.gameController.resetHpEnemies()
@@ -874,26 +930,17 @@ async def touhou_6_watcher(ctx: T6Context):
 							await ctx.send_death_link()
 						hasDied = False
 						deathCounter = 0
-					ctx.updateStageList()
+						ctx.updateStageList()
 				else: # If we're not in a level or a menu, we're probably in the Result Screen
 					bossCounter = -1
 
 		except Exception as err:  # Process closed?
 			print(f"ERROR: {err}")
 			disconnected = True
+			ctx.eosd.gameController = None
 			# attempt to reconnect at the top of the loop
 			await asyncio.sleep(0.5)
 			continue
-
-def connect_to_t6() -> eosdState:
-	eosd = None
-
-	try:
-		eosd = eosdState()
-	except Exception as err:
-		eosd = None
-
-	return eosd
 
 def launch():
 	"""

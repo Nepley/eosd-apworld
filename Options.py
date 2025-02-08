@@ -59,8 +59,12 @@ class DifficultyEnd(Choice):
     default = 0
 
 class ExtraStage(Choice):
-    """Determine if the extra stage is included and therefore, be the final stage"""
-    display_name = "Determine if the extra stage is included and therefore, be the final stage"
+    """
+    Determine if the extra stage is included
+    Linear: The extra stage is considered as the 7th stage
+    Apart: The extra stage has it's own item fo it to be unlocked
+    """
+    display_name = "Determine if the extra stage is included"
     option_exclude = 0
     option_include_linear = 1
     option_include_apart = 2

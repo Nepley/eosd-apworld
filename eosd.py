@@ -11,6 +11,10 @@ HARD = 2
 LUNATIC = 3
 
 ADDR_GAME_MODE = 0x002C6EA4 # 7 = Result Screen / 2 = In Game / 1 = In Menu
+ADDR_IN_DEMO = 0x0029D4C4 # 0 = No / 1 = Yes
+ADDR_MENU = 0x002D496A # 0 = Main Menu / 6 = Difficulty / 7 = Character / 13 = Shot / 19 = Stage Select / 18 = Extra Difficulty
+ADDR_MENU_CURSOR = 0x002DC860
+ADDR_INPUT = 0x0029D904
 ADDR_STAGE = 0x0029D6D4
 ADDR_DIFFICULTY = 0x0029bcb0
 ADDR_CHARACTER = 0x0029d4bd
@@ -165,11 +169,17 @@ ADDR_MARISA_B_LUNATIC_SCORE_6 = 0x0029D4A8
 
 # Others
 ADDR_KILL_CONDITION = 0x00026DC6
+ADDR_CONTROLLER_HANDLER = 0x00023366
+
+ADDR_LOCK_1 = 0x000366F7
+ADDR_LOCK_2 = 0x00036572
+ADDR_LOCK_3 = 0x00036A10
+ADDR_LOCK_4 = 0x00036A8F
+ADDR_LOCK_JMP = 0x00036403
+ADDR_LOCK_FORCE_EXTRA = 0x0003641C # 10 addresses to nop
 
 class eosdController:
 	"""Class accessing the game memory"""
-	gameName = "東方紅魔郷"
-	gameChecksum = "e61b4f4fea3802e926ef307f45166599c3e86555"
 	pm = None
 
 	# Player
@@ -218,13 +228,19 @@ class eosdController:
 	addrPracticeScore = None
 
 	# Other
+	addrControllerHandle = None
+	addrInput = None
 	addrGameMode = None
+	addrMenu = None
+	addrMenuCursor = None
+	addrInDemo = None
 	addrHpEnemies = None
 	addrIsBossPresent = None
 	addrKillCondition = None
+	addrCharacterLock = None
+	addrForceExtra = None
 
-	def __init__(self):
-		pid = find_process(self.gameName, self.gameChecksum)
+	def __init__(self, pid):
 		self.pm = pymem.Pymem(pid)
 
 		self.addrStage = self.pm.base_address+ADDR_STAGE
@@ -264,13 +280,21 @@ class eosdController:
 		self.addrMarisaAExtra = self.pm.base_address+ADDR_MARISA_A_EXTRA
 		self.addrMarisaBExtra = self.pm.base_address+ADDR_MARISA_B_EXTRA
 
+		self.addrControllerHandle = self.pm.base_address+ADDR_CONTROLLER_HANDLER
+		self.addrInput = self.pm.base_address+ADDR_INPUT
 		self.addrGameMode = self.pm.base_address+ADDR_GAME_MODE
+		self.addrMenu = self.pm.base_address+ADDR_MENU
+		self.addrMenuCursor = self.pm.base_address+ADDR_MENU_CURSOR
+		self.addrInDemo = self.pm.base_address+ADDR_IN_DEMO
 		self.addrIsBossPresent = self.pm.base_address+ADDR_IS_BOSS_PRESENT
 		self.addrHpEnemies = []
 		for addr in ADDR_HP_ENEMY:
 			self.addrHpEnemies.append(self.pm.base_address+addr)
 
 		self.addrKillCondition = self.pm.base_address+ADDR_KILL_CONDITION
+
+		self.addrCharacterLock = [self.pm.base_address+ADDR_LOCK_1, self.pm.base_address+ADDR_LOCK_2, self.pm.base_address+ADDR_LOCK_3, self.pm.base_address+ADDR_LOCK_4, self.pm.base_address+ADDR_LOCK_JMP]
+		self.addrForceExtra = self.pm.base_address+ADDR_LOCK_FORCE_EXTRA
 
 		self.addrPracticeScore = {
 			REIMU:
@@ -522,8 +546,20 @@ class eosdController:
 	def getMarisaBExtra(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrMarisaBExtra, 1))
 
+	def getInput(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrInput, 1))
+
 	def getGameMode(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrGameMode, 1))
+
+	def getInDemo(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrInDemo, 1))
+
+	def getMenu(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrMenu, 1))
+
+	def getMenuCursor(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrMenuCursor, 1))
 
 	def getHpEnemies(self):
 		result = []
@@ -536,6 +572,9 @@ class eosdController:
 
 	def getPracticeStageScore(self, characterId, shotId, difficultyId, stageId):
 		return int.from_bytes(self.pm.read_bytes(self.addrPracticeScore[characterId][shotId][difficultyId][stageId], 4))
+
+	def setMenuCursor(self, newCursor):
+		self.pm.write_bytes(self.addrMenuCursor, bytes([newCursor]), 1)
 
 	def setStage(self, newStage):
 		self.pm.write_short(self.addrStage, newStage)
@@ -624,6 +663,9 @@ class eosdController:
 	def setMarisaBExtra(self, newMarisaBExtra):
 		self.pm.write_bytes(self.addrMarisaBExtra, bytes([newMarisaBExtra]), 1)
 
+	def setInput(self, newInput):
+		self.pm.write_bytes(self.addrInput, bytes([newInput]), 1)
+
 	def resetHpEnemies(self):
 		for addr in self.addrHpEnemies:
 			self.pm.write_int(addr, 0)
@@ -639,6 +681,18 @@ class eosdController:
 			self.pm.write_bytes(self.addrKillCondition, bytes([0x90, 0x90]), 2)
 		else:
 			self.pm.write_bytes(self.addrKillCondition, bytes([0xEB, 0x22]), 2)
+
+	def setLockToAllDifficulty(self):
+		for lock in self.addrCharacterLock:
+			self.pm.write_bytes(lock, bytes([0x90, 0x90]), 2)
+
+		self.pm.write_bytes(self.addrForceExtra, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 10)
+
+	def setControllerHandler(self, activate):
+		if activate:
+			self.pm.write_bytes(self.addrControllerHandle, bytes([0x66, 0xA3, 0x04, 0xD9, 0x69, 0x00]), 6)
+		else:
+			self.pm.write_bytes(self.addrControllerHandle, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 6)
 
 class eosdState:
 	"""Class keeping track of what's unlock for the game"""
@@ -666,7 +720,7 @@ class eosdState:
 	bossBeaten = []
 	extraBeaten = []
 
-	def __init__(self):
+	def __init__(self, pid):
 		# Default Value
 		self.lives = 0
 		self.bombs = 0
@@ -840,7 +894,7 @@ class eosdState:
 					[False, False]
 				]
 			]
-		self.gameController = eosdController()
+		self.gameController = eosdController(pid)
 
 	def hasBossSpawn(self):
 		"""Check if a MidBoss or a Boss has spawn"""
@@ -882,7 +936,7 @@ class eosdState:
 			self.giveContinues()
 			self.setDifficulty(True)
 
-	def updateStageList(self, updateExtra = False):
+	def updateStageList(self):
 		if(self.hasReimuA):
 			if(self.hasEasy):
 				self.gameController.setReimuAEasy(self.stages)
@@ -903,19 +957,11 @@ class eosdState:
 				self.gameController.setReimuALunatic(self.stages)
 			else:
 				self.gameController.setReimuALunatic(0)
-
-			if updateExtra:
-				if self.hasExtra[REIMU][SHOT_A]:
-					self.gameController.setReimuAExtra(99)
-				else:
-					self.gameController.setReimuAExtra(0)
 		else:
 			self.gameController.setReimuAEasy(0)
 			self.gameController.setReimuANormal(0)
 			self.gameController.setReimuAHard(0)
 			self.gameController.setReimuALunatic(0)
-			if updateExtra:
-				self.gameController.setReimuAExtra(0)
 
 		if(self.hasReimuB):
 			if(self.hasEasy):
@@ -937,19 +983,11 @@ class eosdState:
 				self.gameController.setReimuBLunatic(self.stages)
 			else:
 				self.gameController.setReimuBLunatic(0)
-
-			if updateExtra:
-				if self.hasExtra[REIMU][SHOT_B]:
-					self.gameController.setReimuBExtra(99)
-				else:
-					self.gameController.setReimuBExtra(0)
 		else:
 			self.gameController.setReimuBEasy(0)
 			self.gameController.setReimuBNormal(0)
 			self.gameController.setReimuBHard(0)
 			self.gameController.setReimuBLunatic(0)
-			if updateExtra:
-				self.gameController.setReimuBExtra(0)
 
 		if(self.hasMarisaA):
 			if(self.hasEasy):
@@ -971,19 +1009,11 @@ class eosdState:
 				self.gameController.setMarisaALunatic(self.stages)
 			else:
 				self.gameController.setMarisaALunatic(0)
-
-			if updateExtra:
-				if self.hasExtra[MARISA][SHOT_A]:
-					self.gameController.setMarisaAExtra(99)
-				else:
-					self.gameController.setMarisaAExtra(0)
 		else:
 			self.gameController.setMarisaAEasy(0)
 			self.gameController.setMarisaANormal(0)
 			self.gameController.setMarisaAHard(0)
 			self.gameController.setMarisaALunatic(0)
-			if updateExtra:
-				self.gameController.setMarisaAExtra(0)
 
 		if(self.hasMarisaB):
 			if(self.hasEasy):
@@ -1005,19 +1035,11 @@ class eosdState:
 				self.gameController.setMarisaBLunatic(self.stages)
 			else:
 				self.gameController.setMarisaBLunatic(0)
-
-			if updateExtra:
-				if self.hasExtra[MARISA][SHOT_B]:
-					self.gameController.setMarisaBExtra(99)
-				else:
-					self.gameController.setMarisaBExtra(0)
 		else:
 			self.gameController.setMarisaBEasy(0)
 			self.gameController.setMarisaBNormal(0)
 			self.gameController.setMarisaBHard(0)
 			self.gameController.setMarisaBLunatic(0)
-			if updateExtra:
-				self.gameController.setMarisaBExtra(0)
 
 	def updatePracticeScore(self, shot_type = False, difficulty = False):
 		if difficulty:
@@ -1089,6 +1111,26 @@ class eosdState:
 						self.gameController.setPracticeStageScore(character, SHOT_B, HARD, stage, score)
 						self.gameController.setPracticeStageScore(character, SHOT_B, LUNATIC, stage, score)
 
+	def updateExtraUnlock(self, otherMode = False):
+		if self.hasReimuA and (self.hasExtra[REIMU][SHOT_A] or otherMode):
+			self.gameController.setReimuAExtra(99)
+		else:
+			self.gameController.setReimuAExtra(0)
+
+		if self.hasReimuB and (self.hasExtra[REIMU][SHOT_B] or otherMode):
+			self.gameController.setReimuBExtra(99)
+		else:
+			self.gameController.setReimuBExtra(0)
+
+		if self.hasMarisaA and (self.hasExtra[MARISA][SHOT_A] or otherMode):
+			self.gameController.setMarisaAExtra(99)
+		else:
+			self.gameController.setMarisaAExtra(0)
+
+		if self.hasMarisaB and (self.hasExtra[MARISA][SHOT_B] or otherMode):
+			self.gameController.setMarisaBExtra(99)
+		else:
+			self.gameController.setMarisaBExtra(0)
 	#
 	# Boss
 	#
@@ -1212,21 +1254,21 @@ class eosdState:
 		if(self.lives < 8):
 			self.lives += 1
 
-		if addInLevel and self.gameController.getGameMode() == 2:
+		if addInLevel and self.gameController.getGameMode() == 2 and self.gameController.getInDemo() != 1:
 			self.gameController.setLives(self.gameController.getLives() + 1)
 
 	def addBomb(self, addInLevel = True):
 		if(self.bombs < 8):
 			self.bombs += 1
 
-		if addInLevel and self.gameController.getGameMode() == 2:
+		if addInLevel and self.gameController.getGameMode() == 2 and self.gameController.getInDemo() != 1:
 			self.gameController.setBombs(self.gameController.getBombs() + 1)
 
 	def add1Power(self, addInLevel = True):
 		if(self.power < 128):
 			self.power += 1
 
-		if addInLevel and self.gameController.getGameMode() == 2 and self.gameController.getPower() < 128:
+		if addInLevel and self.gameController.getGameMode() == 2 and self.gameController.getPower() < 128 and self.gameController.getInDemo() != 1:
 			self.gameController.setPower(self.gameController.getPower() + 1)
 
 	def add25Power(self, addInLevel = True):
@@ -1235,7 +1277,7 @@ class eosdState:
 		else:
 			self.power = 128
 
-		if addInLevel and self.gameController.getGameMode() == 2:
+		if addInLevel and self.gameController.getGameMode() == 2 and self.gameController.getInDemo() != 1:
 			if self.gameController.getPower() < 103:
 				self.gameController.setPower(self.gameController.getPower() + 25)
 			else:
@@ -1294,12 +1336,6 @@ class eosdState:
 	# Other
 	#
 
-	def connect(self):
-		try:
-			self.gameController = eosdController()
-		except Exception as err:
-			self.gameController = None
-
 	def reset(self):
 		# Default Value
 		self.lives = 0
@@ -1320,3 +1356,16 @@ class eosdState:
 		self.hasReimuB = False
 		self.hasMarisaA = False
 		self.hasMarisaB = False
+
+	def checkCursor(self):
+		cursor = self.gameController.getMenuCursor()
+		if self.gameController.getMenu() == 6:
+			move = 0
+			if cursor == 0 and not self.hasEasy:
+				move += 1
+			if cursor+move == 1 and not self.hasNormal:
+				move += 1
+			if cursor+move == 2 and not self.hasHard:
+				move += 1
+
+			self.gameController.setMenuCursor(self.gameController.getMenuCursor()+move)
