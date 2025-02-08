@@ -33,10 +33,6 @@ You can also choose if you must finish the game with just one character or both 
 
 ## How to use
 
-1. Connect the client "Touhou 6" found in the archipelago launcher to the server.
-2. Once the message "Waiting for connection to Touhou 6..." appeared, launch the game (you can launch it before)
+1. Launch the game
+2. Connect the client "Touhou 6" found in the archipelago launcher to the server.
 3. If the message "Touhou 6 process found. Starting loop..." appeared, you're good to go
-
-## Known Issues
-* If you go to a character/shot type without any stage, you can still confirm and you will go to stage 1. The game is not supposed to have no stage in practice.
-* The demo play can activate the death link if it's active.
