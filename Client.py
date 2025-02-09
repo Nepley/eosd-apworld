@@ -107,7 +107,7 @@ class T6Context(CommonContext):
 		:NetworkItem item: The item to give to the player
 		"""
 
-		isNormalMode = self.options['mode'] == 1
+		updateDifficulty = self.options['mode'] == 1 and not self.options['difficulty_check']
 		isExtraStageLinear = self.options['extra_stage'] == 1
 		isExtraStageApart = self.options['extra_stage'] == 2
 
@@ -123,7 +123,7 @@ class T6Context(CommonContext):
 					self.eosd.addBomb()
 				case 60002: # Lower Difficulty
 					self.difficulties += 1
-					self.eosd.unlockDifficulty(self.difficulties, isNormalMode)
+					self.eosd.unlockDifficulty(self.difficulties, updateDifficulty)
 				case 60003: # Reimu A
 					self.eosd.unlockCharacter(0)
 				case 60004: # Reimu B
@@ -703,8 +703,9 @@ class T6Context(CommonContext):
 			await self.send_death()
 
 	def giveResources(self):
-		isNormalMode = self.options['mode'] == 1
-		return self.eosd.giveAllResources(isNormalMode)
+		isNormalMode = self.options['mode'] == 1 
+		autoDifficulty = not self.options['difficulty_check']
+		return self.eosd.giveAllResources(isNormalMode, autoDifficulty)
 
 	def updateStageList(self):
 		shot_type = self.options['shot_type']

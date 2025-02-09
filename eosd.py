@@ -927,14 +927,16 @@ class eosdState:
 	def setDifficulty(self, excludeEasy = False):
 		self.gameController.setDifficulty(self.getHighestDifficulty(excludeEasy))
 
-	def giveAllResources(self, normalMode = False):
+	def giveAllResources(self, normalMode = False, autoDifficulty = False):
 		self.giveLives()
 		self.giveBombs()
 		self.givePower()
 
 		if normalMode:
 			self.giveContinues()
-			self.setDifficulty(True)
+
+			if autoDifficulty:
+				self.setDifficulty(True)
 
 	def updateStageList(self):
 		if(self.hasReimuA):
