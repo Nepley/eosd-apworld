@@ -150,7 +150,7 @@ class T6Context(CommonContext):
 				case 60015: # 25 Power Point
 					self.eosd.add25Power()
 				case 60016: # 1 Continue
-					self.eosd.addContinues()
+					self.eosd.addContinue()
 				case 60017: # Extra Stage
 					if isExtraStageApart:
 						self.eosd.unlockExtraStage()
