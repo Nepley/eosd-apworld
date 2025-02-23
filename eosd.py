@@ -16,9 +16,11 @@ ADDR_MENU = 0x002D496A # 0 = Main Menu / 6 = Difficulty / 7 = Character / 13 = S
 ADDR_MENU_CURSOR = 0x002DC860
 ADDR_INPUT = 0x0029D904
 ADDR_STAGE = 0x0029D6D4
-ADDR_DIFFICULTY = 0x0029bcb0
-ADDR_CHARACTER = 0x0029d4bd
-ADDR_SHOT_TYPE = 0x0029d4be
+ADDR_DIFFICULTY = 0x0029BCB0
+ADDR_RANK = 0x0029D710
+ADDR_CHARACTER = 0x0029D4BD
+ADDR_SHOT_TYPE = 0x0029D4BE
+ADDR_CUSTOM_SOUND_ID = 0x0029D4FB
 
 ADDR_HP_ENEMY = [0x000B957C, 0x000BA444, 0x000BB30C, 0x000BC1D4, 0x000BD09C, 0x000BDF64, 0x000BEE2C, 0x000BFCF4, 0x000C0BBC, 0x000C1A84, 0x000C294C, 0x000C3814, 0x000C55A4, 0x000C7334]
 ADDR_IS_BOSS_PRESENT = 0x0029BC50 # 0 = No boss / 1 = Boss present
@@ -167,6 +169,12 @@ ADDR_MARISA_B_LUNATIC_SCORE_4 = 0x0029D408
 ADDR_MARISA_B_LUNATIC_SCORE_5 = 0x0029D458
 ADDR_MARISA_B_LUNATIC_SCORE_6 = 0x0029D4A8
 
+# Character Speed
+ADDR_NORMAL_SPEED = 0x002CB01E
+ADDR_FOCUS_SPEED = 0x002CB022
+ADDR_NORMAL_SPEED_D = 0x002CB026
+ADDR_FOCUS_SPEED_D = 0x002CB02A
+
 # Others
 ADDR_KILL_CONDITION = 0x00026DC6
 ADDR_CONTROLLER_HANDLER = 0x00023366
@@ -178,6 +186,9 @@ ADDR_LOCK_4 = 0x00036A8F
 ADDR_LOCK_JMP = 0x00036403
 ADDR_LOCK_FORCE_EXTRA = 0x0003641C # 10 addresses to nop
 
+ADDR_SOUND_HACK_1 = 0x0001CB6C
+ADDR_SOUND_HACK_2 = 0x00021AC1
+
 class eosdController:
 	"""Class accessing the game memory"""
 	pm = None
@@ -186,6 +197,7 @@ class eosdController:
 	addrStage = None
 	addrDifficulty = None
 	addrCharacter = None
+	addrRank = None
 	addrShotType = None
 
 	# Resources
@@ -227,6 +239,12 @@ class eosdController:
 	# Practice stage score
 	addrPracticeScore = None
 
+	# Character speed
+	addrNormalSpeed = None
+	addrFocusSpeed = None
+	addrNormalSpeedD = None
+	addrFocusSpeedD = None
+
 	# Other
 	addrControllerHandle = None
 	addrInput = None
@@ -239,12 +257,16 @@ class eosdController:
 	addrKillCondition = None
 	addrCharacterLock = None
 	addrForceExtra = None
+	addrCustomSoundId = None
+	addrSoundHack1 = None
+	addrSoundHack2 = None
 
 	def __init__(self, pid):
 		self.pm = pymem.Pymem(pid)
 
 		self.addrStage = self.pm.base_address+ADDR_STAGE
 		self.addrDifficulty = self.pm.base_address+ADDR_DIFFICULTY
+		self.addrRank = self.pm.base_address+ADDR_RANK
 		self.addrCharacter = self.pm.base_address+ADDR_CHARACTER
 		self.addrShotType = self.pm.base_address+ADDR_SHOT_TYPE
 
@@ -295,6 +317,15 @@ class eosdController:
 
 		self.addrCharacterLock = [self.pm.base_address+ADDR_LOCK_1, self.pm.base_address+ADDR_LOCK_2, self.pm.base_address+ADDR_LOCK_3, self.pm.base_address+ADDR_LOCK_4, self.pm.base_address+ADDR_LOCK_JMP]
 		self.addrForceExtra = self.pm.base_address+ADDR_LOCK_FORCE_EXTRA
+
+		self.addrNormalSpeed = self.pm.base_address+ADDR_NORMAL_SPEED
+		self.addrFocusSpeed = self.pm.base_address+ADDR_FOCUS_SPEED
+		self.addrNormalSpeedD = self.pm.base_address+ADDR_NORMAL_SPEED_D
+		self.addrFocusSpeedD = self.pm.base_address+ADDR_FOCUS_SPEED_D
+
+		self.addrCustomSoundId = self.pm.base_address+ADDR_CUSTOM_SOUND_ID
+		self.addrSoundHack1 = self.pm.base_address+ADDR_SOUND_HACK_1
+		self.addrSoundHack2 = self.pm.base_address+ADDR_SOUND_HACK_2
 
 		self.addrPracticeScore = {
 			REIMU:
@@ -455,7 +486,6 @@ class eosdController:
 							self.pm.base_address+ADDR_MARISA_B_LUNATIC_SCORE_6,
 						],
 					}
-
 				}
 		}
 
@@ -464,6 +494,9 @@ class eosdController:
 
 	def getDifficulty(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrDifficulty, 1))
+
+	def getRank(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrRank, 1))
 
 	def getCharacter(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrCharacter, 1))
@@ -561,6 +594,21 @@ class eosdController:
 	def getMenuCursor(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrMenuCursor, 1))
 
+	def getNormalSpeed(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrNormalSpeed, 2))
+
+	def getFocusSpeed(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrFocusSpeed, 2))
+
+	def getNormalSpeedD(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrNormalSpeedD, 2))
+
+	def getFocusSpeedD(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrFocusSpeedD, 2))
+
+	def getCustomSoundId(self):
+		return int.from_bytes(self.pm.read_bytes(self.addrCustomSoundId, 1))
+
 	def getHpEnemies(self):
 		result = []
 		for addr in self.addrHpEnemies:
@@ -581,6 +629,9 @@ class eosdController:
 
 	def setDifficulty(self, newDifficulty):
 		self.pm.write_short(self.addrDifficulty, newDifficulty)
+
+	def setRank(self, newRank):
+		self.pm.write_bytes(self.addrRank, bytes([newRank]), 1)
 
 	def setCharacter(self, newCharacter):
 		self.pm.write_short(self.addrCharacter, newCharacter)
@@ -666,6 +717,18 @@ class eosdController:
 	def setInput(self, newInput):
 		self.pm.write_bytes(self.addrInput, bytes([newInput]), 1)
 
+	def setNormalSpeed(self, newNormalSpeed):
+		self.pm.write_bytes(self.addrNormalSpeed, newNormalSpeed.to_bytes(2), 2)
+
+	def setFocusSpeed(self, newFocusSpeed):
+		self.pm.write_bytes(self.addrFocusSpeed, newFocusSpeed.to_bytes(2), 2)
+
+	def setNormalSpeedD(self, newNormalSpeedD):
+		self.pm.write_bytes(self.addrNormalSpeedD, newNormalSpeedD.to_bytes(2), 2)
+
+	def setFocusSpeedD(self, newFocusSpeedD):
+		self.pm.write_bytes(self.addrFocusSpeedD, newFocusSpeedD.to_bytes(2), 2)
+
 	def resetHpEnemies(self):
 		for addr in self.addrHpEnemies:
 			self.pm.write_int(addr, 0)
@@ -694,6 +757,28 @@ class eosdController:
 		else:
 			self.pm.write_bytes(self.addrControllerHandle, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 6)
 
+	def initSoundHack(self):
+		soundIdHex = hex(self.addrCustomSoundId)[2:]
+		soundId = [int(soundIdHex[i:i+2], 16) for i in range(0, len(soundIdHex), 2)]
+		self.pm.write_bytes(self.addrSoundHack2, bytes([0xC7, 0x05, soundId[2], soundId[1], soundId[0], 0x00, 0x20, 0x00, 0x00, 0x00,
+														0xE9, 0xBD, 0xB0, 0xFF, 0xFF]), 15)
+
+		self.pm.write_bytes(self.addrSoundHack1, bytes([0x6A, 0x00,
+														0xEB, 0x08,
+														0x41,
+														0x00, 0x53, 0xCB,
+														0x41,
+														0x00, 0x41, 0xCB,
+														0xFF, 0x35, soundId[2], soundId[1], soundId[0], 0x00,
+														0xB9, 0x50, 0x3F, 0x6D, 0x00,
+														0xE8, 0x58, 0x46, 0x01, 0x00,
+														0xE9, 0x34, 0x4F, 0x00, 0x00,
+														0x5D,
+														0xC3]), 35)
+
+	def setCustomSoundId(self, soundId = 0x0D):
+		self.pm.write_bytes(self.addrCustomSoundId, bytes([soundId]), 1)
+
 class eosdState:
 	"""Class keeping track of what's unlock for the game"""
 	lives = None
@@ -716,6 +801,7 @@ class eosdState:
 	hasMarisaB = None
 
 	gameController = None
+	lastSpeeds = []
 
 	bossBeaten = []
 	extraBeaten = []
@@ -895,6 +981,8 @@ class eosdState:
 				]
 			]
 		self.gameController = eosdController(pid)
+		self.gameController.initSoundHack()
+		self.lastSpeeds = [0, 0, 0, 0]
 
 	def hasBossSpawn(self):
 		"""Check if a MidBoss or a Boss has spawn"""
@@ -1133,6 +1221,7 @@ class eosdState:
 			self.gameController.setMarisaBExtra(99)
 		else:
 			self.gameController.setMarisaBExtra(0)
+
 	#
 	# Boss
 	#
@@ -1335,6 +1424,58 @@ class eosdState:
 			self.hasMarisaB = True
 
 	#
+	# Traps
+	#
+
+	def halfPowerPoint(self):
+		if(self.gameController.getPower() > 0):
+			self.gameController.setPower(self.gameController.getPower() // 2)
+
+	def loseBomb(self):
+		if(self.gameController.getBombs() > 0):
+			self.gameController.setBombs(self.gameController.getBombs() - 1)
+
+	def loseLife(self):
+		if(self.gameController.getLives() > 0):
+			self.gameController.setLives(self.gameController.getLives() - 1)
+
+	def powerPointDrain(self):
+		if(self.gameController.getPower() > 0):
+			self.gameController.setPower(self.gameController.getPower() - 1)
+
+	def maxRank(self):
+		self.gameController.setRank(32)
+
+	def noFocus(self):
+		self.gameController.setFocusSpeed(self.gameController.getNormalSpeed())
+		self.gameController.setFocusSpeedD(self.gameController.getNormalSpeedD())
+
+	def reverseControls(self):
+		self.gameController.setNormalSpeed(self.gameController.getNormalSpeed()+0x0080)
+		self.gameController.setFocusSpeed(self.gameController.getFocusSpeed()+0x0080)
+		self.gameController.setNormalSpeedD(self.gameController.getNormalSpeedD()+0x0080)
+		self.gameController.setFocusSpeedD(self.gameController.getFocusSpeedD()+0x0080)
+
+	def ayaSpeed(self):
+		self.gameController.setNormalSpeed(self.gameController.getNormalSpeed()+0x0001)
+		self.gameController.setFocusSpeed(self.gameController.getFocusSpeed()-0x0001)
+		self.gameController.setNormalSpeedD(self.gameController.getNormalSpeedD()+0x0001)
+		self.gameController.setFocusSpeedD(self.gameController.getFocusSpeedD()-0x0001)
+
+	def freeze(self):
+		self.lastSpeeds = [self.gameController.getNormalSpeed(), self.gameController.getFocusSpeed(), self.gameController.getNormalSpeedD(), self.gameController.getFocusSpeedD()]
+		self.gameController.setNormalSpeed(0x0000)
+		self.gameController.setFocusSpeed(0x0000)
+		self.gameController.setNormalSpeedD(0x0000)
+		self.gameController.setFocusSpeedD(0x0000)
+
+	def resetSpeed(self):
+		self.gameController.setNormalSpeed(self.lastSpeeds[0])
+		self.gameController.setFocusSpeed(self.lastSpeeds[1])
+		self.gameController.setNormalSpeedD(self.lastSpeeds[2])
+		self.gameController.setFocusSpeedD(self.lastSpeeds[3])
+
+	#
 	# Other
 	#
 
@@ -1371,3 +1512,6 @@ class eosdState:
 				move += 1
 
 			self.gameController.setMenuCursor(self.gameController.getMenuCursor()+move)
+
+	def playSound(self, soundId):
+		self.gameController.setCustomSoundId(soundId)

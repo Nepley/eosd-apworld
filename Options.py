@@ -108,6 +108,103 @@ class EndingRequired(Choice):
     option_all_shot_types = 2
     default = 0
 
+class Traps(Range):
+    """Percentage of fillers that are traps"""
+    display_name = "Percentage of fillers that are traps"
+    range_start = 0
+    range_end = 100
+    default = 0
+
+class MaxRankTrap(Range):
+    """
+    Weight of the max rank trap.
+    This trap max out the rank difficulty (32)
+    """
+    display_name = "Max rank trap"
+    range_start = 0
+    range_end = 100
+    default = 30
+
+class PowerPointTrap(Range):
+    """
+    Weight of the -50% power point trap.
+    This trap reduce the power point by 50%
+    """
+    display_name = "-50% power point trap"
+    range_start = 0
+    range_end = 100
+    default = 20
+
+class BombTrap(Range):
+    """
+    Weight of the -1 bomb trap.
+    This trap remove 1 bomb
+    """
+    display_name = "-1 bomb trap"
+    range_start = 0
+    range_end = 100
+    default = 0
+
+class LifeTrap(Range):
+    """
+    Weight of the -1 life trap.
+    This trap remove 1 life
+    """
+    display_name = "-1 life trap"
+    range_start = 0
+    range_end = 100
+    default = 0
+
+class NoFocusTrap(Range):
+    """
+    Weight of the no focus trap.
+    This trap remove the focus ability
+    """
+    display_name = "No focus trap"
+    range_start = 0
+    range_end = 100
+    default = 20
+
+class ReverseMovementTrap(Range):
+    """
+    Weight of the Reverse Movement trap.
+    This trap reverse the movement of the player
+    """
+    display_name = "Reverse Movement trap"
+    range_start = 0
+    range_end = 100
+    default = 20
+
+class AyaSpeedTrap(Range):
+    """
+    Weight of the Aya speed trap.
+    This trap make the speed of the player more extreme (faster normally, slower focus)
+    """
+    display_name = "Aya speed trap"
+    range_start = 0
+    range_end = 100
+    default = 20
+
+class FreezeTrap(Range):
+    """
+    Weight of the freeze trap.
+    This trap freeze the player for a short amount of time
+    """
+    display_name = "Freeze trap"
+    range_start = 0
+    range_end = 100
+    default = 5
+
+class PowerPointDrainTrap(Range):
+    """
+    Weight of the power point drain trap.
+    This trap drain the power point of the player (1 power point per second)
+    """
+    display_name = "Power point drain trap"
+    range_start = 0
+    range_end = 100
+    default = 15
+
 t6_options: Dict[str, type(Option)] = {
     "mode": Mode,
     "number_life_mid": NumberLifeMid,
@@ -124,4 +221,14 @@ t6_options: Dict[str, type(Option)] = {
     "goal": Goal,
     "ending_required": EndingRequired,
     "death_link": DeathLink,
+    "traps": Traps,
+    "max_rank_trap": MaxRankTrap,
+    "power_point_trap": PowerPointTrap,
+    "bomb_trap": BombTrap,
+    "life_trap": LifeTrap,
+    "no_focus_trap": NoFocusTrap,
+    "reverse_movement_trap": ReverseMovementTrap,
+    "aya_speed_trap": AyaSpeedTrap,
+    "freeze_trap": FreezeTrap,
+    "power_point_drain_trap": PowerPointDrainTrap,
 }

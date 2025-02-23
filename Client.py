@@ -33,6 +33,8 @@ class T6Context(CommonContext):
 
 		# Counter
 		self.difficulties = 0
+		self.traps = {"power_point_drain": 0, "max_rank": 0, "no_focus": 0, "reverse_control": 0, "aya_speed": 0, "freeze": 0, "bomb": 0, "life": 0, "power_point": 0}
+		self.can_trap = True
 
 		self.options = None
 		self.otherDifficulties = True
@@ -110,6 +112,7 @@ class T6Context(CommonContext):
 		updateDifficulty = self.options['mode'] == 1 and not self.options['difficulty_check']
 		isExtraStageLinear = self.options['extra_stage'] == 1
 		isExtraStageApart = self.options['extra_stage'] == 2
+		gotAnyItem = False
 
 		# We wait for the link to be etablished to the game before giving any items
 		while self.eosd is None:
@@ -119,45 +122,80 @@ class T6Context(CommonContext):
 			match item.item:
 				case 60000: # Life
 					self.eosd.addLife()
+					gotAnyItem = True
 				case 60001: # Bomb
 					self.eosd.addBomb()
+					gotAnyItem = True
 				case 60002: # Lower Difficulty
 					self.difficulties += 1
 					self.eosd.unlockDifficulty(self.difficulties, updateDifficulty)
+					gotAnyItem = True
 				case 60003: # Reimu A
 					self.eosd.unlockCharacter(0)
+					gotAnyItem = True
 				case 60004: # Reimu B
 					self.eosd.unlockCharacter(1)
+					gotAnyItem = True
 				case 60005: # Marisa A
 					self.eosd.unlockCharacter(2)
+					gotAnyItem = True
 				case 60006: # Marisa B
 					self.eosd.unlockCharacter(3)
+					gotAnyItem = True
 				case 60013: # Next Stage
 					if self.eosd.stages < 6:
 						self.eosd.addStage()
 					elif self.eosd.stages >= 6 and isExtraStageLinear:
 						self.eosd.unlockExtraStage()
+					gotAnyItem = True
 				case 60014 | 60018: # Ending Remilia
 					character = REIMU if item.item == 60014 else MARISA
 					self.eosd.addEndingRemilia(character)
 					if self.checkVictory():
 						await self.send_msgs([{"cmd": 'StatusUpdate', "status": 30}])
+					gotAnyItem = True
 				case 60019 | 60020: # Ending Flandre
 					character = REIMU if item.item == 60019 else MARISA
 					self.eosd.addEndingFlandre(character)
 					if self.checkVictory():
 						await self.send_msgs([{"cmd": 'StatusUpdate', "status": 30}])
+					gotAnyItem = True
 				case 60015: # 25 Power Point
 					self.eosd.add25Power()
+					gotAnyItem = True
 				case 60016: # 1 Continue
 					self.eosd.addContinue()
+					gotAnyItem = True
 				case 60017: # Extra Stage
 					if isExtraStageApart:
 						self.eosd.unlockExtraStage()
+					gotAnyItem = True
 				case 60030: # 1 Power Point
 					self.eosd.add1Power()
+					gotAnyItem = True
+				case 60040: # Max Rank
+					self.traps["max_rank"] += 1
+				case 60041: # -50% Power Point
+					self.traps["power_point"] += 1
+				case 60042: # -1 Bomb
+					self.traps["bomb"] += 1
+				case 60043: # -1 Life
+					self.traps["life"] += 1
+				case 60044: # No Focus
+					self.traps["no_focus"] += 1
+				case 60045: # Reverse Movement
+					self.traps["reverse_control"] += 1
+				case 60046: # Aya Speed
+					self.traps["aya_speed"] += 1
+				case 60047: # Freeze
+					self.traps["freeze"] += 1
+				case 60048: # Power Point Drain
+					self.traps["power_point_drain"] += 1
 				case _:
 					print(f"[EOSD] Unknown Item: {item}")
+
+		if gotAnyItem:
+			self.eosd.playSound(0x19)
 
 		# Update the stage list
 		self.eosd.updateStageList()
@@ -769,6 +807,96 @@ class T6Context(CommonContext):
 			else:
 				await asyncio.sleep(0.1)
 
+	async def trap_loop(self):
+		PowerPointDrain = False
+		MaxRank = False
+		NoFocus = False
+		ReverseControls = False
+		AyaSpeed = False
+		Freeze = False
+		InLevel = False
+		TransitionTimer = 2
+		counterTransition = 0
+		freezeTimer = 2
+		counterFreeze = 0
+		while True:
+			await asyncio.sleep(1)
+			if self.eosd.gameController.getGameMode() == 2 and self.eosd.gameController.getInDemo() != 1:
+				# If we enter a level and some time has passed, we activate the traps
+				if not InLevel and counterTransition < TransitionTimer:
+					counterTransition += 1
+				elif not InLevel:
+					InLevel = True
+					counterTransition = 0
+
+				if InLevel and self.can_trap:
+					# Checks if we need to add a new trap
+					if not PowerPointDrain and self.traps['power_point_drain'] > 0:
+						PowerPointDrain = True
+						self.traps['power_point_drain'] -= 1
+						self.eosd.playSound(0x1F)
+					elif not MaxRank and self.traps['max_rank'] > 0:
+						MaxRank = True
+						self.traps['max_rank'] -= 1
+						self.eosd.playSound(0x10)
+						self.eosd.maxRank()
+					elif not ReverseControls and self.traps['reverse_control'] > 0:
+						ReverseControls = True
+						self.traps['reverse_control'] -= 1
+						self.eosd.playSound(0x0D)
+						self.eosd.reverseControls()
+					elif not AyaSpeed and self.traps['aya_speed'] > 0:
+						AyaSpeed = True
+						self.traps['aya_speed'] -= 1
+						self.eosd.playSound(0x0D)
+						self.eosd.ayaSpeed()
+					elif not NoFocus and self.traps['no_focus'] > 0:
+						NoFocus = True
+						self.traps['no_focus'] -= 1
+						self.eosd.playSound(0x0D)
+						self.eosd.noFocus()
+					elif not Freeze and self.traps['freeze'] > 0:
+						Freeze = True
+						self.traps['freeze'] -= 1
+						self.eosd.playSound(0x0D)
+						self.eosd.freeze()
+					elif self.traps['bomb'] > 0:
+						self.traps['bomb'] -= 1
+						self.eosd.playSound(0x0E)
+						self.eosd.loseBomb()
+					elif self.traps['life'] > 0:
+						self.traps['life'] -= 1
+						self.eosd.playSound(0x04)
+						self.eosd.loseLife()
+					elif self.traps['power_point'] > 0:
+						self.traps['power_point'] -= 1
+						self.eosd.playSound(0x1F)
+						self.eosd.halfPowerPoint()
+
+					# Power Point Drain apply each loop until the player dies or the level is exited
+					if PowerPointDrain:
+						self.eosd.powerPointDrain()
+
+					# Freeze apply each loop until the timer is done
+					if Freeze:
+						if counterFreeze < freezeTimer:
+							counterFreeze += 1
+						else:
+							Freeze = False
+							counterFreeze = 0
+							self.eosd.resetSpeed()
+			else:
+				InLevel = False
+				PowerPointDrain = False
+				MaxRank = False
+				NoFocus = False
+				ReverseControls = False
+				AyaSpeed = False
+				Freeze = False
+				counterTransition = 0
+				counterFreeze = 0
+				self.can_trap = True
+
 	async def connect_to_eosd(self):
 		self.eosd = None
 
@@ -833,6 +961,7 @@ async def touhou_6_watcher(ctx: T6Context):
 			# We start the loop for the extra menu and the difficulty cursor in tasks since they need to be faster
 			asyncio.create_task(ctx.extra_unlock_loop())
 			asyncio.create_task(ctx.difficulty_cursor_loop())
+			asyncio.create_task(ctx.trap_loop())
 
 			# Activating Death Link
 			if ctx.options['death_link']:
@@ -879,6 +1008,9 @@ async def touhou_6_watcher(ctx: T6Context):
 							if(ctx.eosd.gameController.getIsBossPresent() == 0):
 								# print(f"{ctx.eosd.getBossName(bossCounter)} has been defeated")
 								if(not ctx.eosd.isCurrentBossDefeated(bossCounter)):
+									#We disable the trap if the stage is ending
+									if bossCounter == 1:
+										ctx.can_trap = False
 									ctx.eosd.setbossBeaten(bossCounter, ctx.otherDifficulties)
 									await ctx.update_locations_checked()
 								bossPresent = False

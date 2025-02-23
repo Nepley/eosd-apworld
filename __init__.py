@@ -50,12 +50,26 @@ class T6World(World):
         extra = getattr(self.options, "extra_stage")
         goal = getattr(self.options, "goal")
         shot_type = getattr(self.options, "shot_type")
+        traps = getattr(self.options, "traps")
+        max_rank_trap = getattr(self.options, "max_rank_trap")
+        power_point_trap = getattr(self.options, "power_point_trap")
+        bomb_trap = getattr(self.options, "bomb_trap")
+        life_trap = getattr(self.options, "life_trap")
+        no_focus_trap = getattr(self.options, "no_focus_trap")
+        reverse_movement_trap = getattr(self.options, "reverse_movement_trap")
+        aya_speed_trap = getattr(self.options, "aya_speed_trap")
+        freeze_trap = getattr(self.options, "freeze_trap")
+        power_point_drain_trap = getattr(self.options, "power_point_drain_trap")
 
         for name, data in item_table.items():
             quantity = data.max_quantity
 
             # Categories to be ignored, they will be added in a later stage if necessary.
             if data.category == "Filler":
+                continue
+
+            # Will be added later
+            if data.category == "Traps":
                 continue
 
             # Will be added manually later
@@ -123,6 +137,17 @@ class T6World(World):
                 self.multiworld.get_location("[Reimu] Stage 6 Clear", self.player).place_locked_item(ending_remilia_reimu)
                 self.multiworld.get_location("[Marisa] Stage 6 Clear", self.player).place_locked_item(ending_remilia_marisa)
                 number_placed_item += 2
+
+        if traps > 0:
+            remaining_locations = total_locations - (len(item_pool) + number_placed_item)
+
+            #If we have traps, we count how many of them we add
+            number_traps = int(remaining_locations * traps / 100)
+
+            if number_traps > 0:
+                trapList = random.choices(["Max Rank", "-50% Power Point", "-1 Bomb", "-1 Life", "No Focus", "Reverse Movement", "Aya Speed", "Freeze", "Power Point Drain"], weights=[max_rank_trap, power_point_trap, bomb_trap, life_trap, no_focus_trap, reverse_movement_trap, aya_speed_trap, freeze_trap, power_point_drain_trap], k=number_traps)
+                for trap in trapList:
+                    item_pool.append(self.create_item(trap))
 
         # Fill any empty locations with filler items.
         while len(item_pool) + number_placed_item < total_locations:

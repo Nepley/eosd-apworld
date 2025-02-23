@@ -46,6 +46,17 @@ item_table: Dict[str, T6ItemData] = {
 
 	# Junk
 	"1 Power Point": T6ItemData("Filler", 60_030),
+
+	# Trap
+	"Max Rank":			 T6ItemData("Traps", 60_040, ItemClassification.trap),
+	"-50% Power Point":	 T6ItemData("Traps", 60_041, ItemClassification.trap),
+	"-1 Bomb":			 T6ItemData("Traps", 60_042, ItemClassification.trap),
+	"-1 Life":			 T6ItemData("Traps", 60_043, ItemClassification.trap),
+	"No Focus":			 T6ItemData("Traps", 60_044, ItemClassification.trap),
+	"Reverse Movement":  T6ItemData("Traps", 60_045, ItemClassification.trap),
+	"Aya Speed":		 T6ItemData("Traps", 60_046, ItemClassification.trap),
+	"Freeze":			 T6ItemData("Traps", 60_047, ItemClassification.trap),
+	"Power Point Drain": T6ItemData("Traps", 60_048, ItemClassification.trap),
 }
 
 event_item_table: Dict[str, T6ItemData] = {}
