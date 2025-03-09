@@ -1,10 +1,11 @@
-import subprocess
 import asyncio
 import os
 import hashlib
 import json
+from .Variables import *
+from .Mapping import CHAR_MAP, RED_CHAR_MAP
 
-process_already_checked_list = []
+process_already_checked_list = [] # For performance reasons, we don't want to check the same process multiple times
 
 async def calculate_file_checksum(file_path, hash_algorithm="sha1"):
 	"""Calculate the checksum of a given file."""
@@ -18,6 +19,7 @@ async def calculate_file_checksum(file_path, hash_algorithm="sha1"):
 		return None
 
 async def get_all_process():
+	"""Get all running processes."""
 	try:
 		# PowerShell command to get all process executable paths and PIDs
 		command = [
@@ -28,7 +30,7 @@ async def get_all_process():
 			"Get-Process | Where-Object { $_.Path -ne $null } | Select-Object -Property Id, Path | ConvertTo-Json"
 		]
 
-		pw = await asyncio.create_subprocess_exec("powershell", "-NoProfile", "-Command", "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();", "Get-Process | Where-Object { $_.Path -ne $null } | Select-Object -Property Id, Path | ConvertTo-Json", stdout=asyncio.subprocess.PIPE)
+		pw = await asyncio.create_subprocess_exec("powershell", "-NoProfile", "-Command", "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();", "Get-Process | Where-Object { $_.Path -ne $null } | Select-Object -Property Id, Path | ConvertTo-Json", stdout=asyncio.subprocess.PIPE, creationflags=0x08000000)
 
 		await asyncio.sleep(1)
 		result, errors = await pw.communicate()
@@ -37,7 +39,8 @@ async def get_all_process():
 	except Exception as e:
 		print(f"Unexpected error: {e}")
 
-async def find_process(name = "東方紅魔郷", target_checksum = "e61b4f4fea3802e926ef307f45166599c3e86555", hash_algorithm="sha1"):
+async def find_process(name = GAME_NAME, target_checksum = GAME_HASH, hash_algorithm="sha1"):
+	"""Find a process by name or checksum."""
 	processes = await get_all_process()
 	global process_already_checked_list
 
@@ -61,3 +64,12 @@ async def find_process(name = "東方紅魔郷", target_checksum = "e61b4f4fea38
 						process_already_checked_list.append(process['Id'])
 
 	return pid_game
+
+def textToBytes(text: str, red = False):
+	bytes = []
+	current_char_map = RED_CHAR_MAP if red else CHAR_MAP
+
+	for char in text:
+		bytes.append(current_char_map[char])
+
+	return bytes
