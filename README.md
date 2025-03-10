@@ -29,11 +29,17 @@ Normal Mode can be played with a dynamic difficulty or a static one.
 * Static: The difficulty stay to the one you have selected
 
 **Resources:** You can set the resources needed for the stages 3/4 and stages 5/6.
+
 **Extra Stage:** You can enable the extra stage and choose if it act as the 7th stage or if it is unlocked separately. In normal mode, it is unlocked after clearing the stage 6 if it's not it's own unlock.
+
 **Goal:** If the extra stage is enabled, you can choose which goal you want between Remilia, Flandre or both.
+
 **Endings Required:** If you must clear your goal with just one character, both of them or with all shot type if they are enabled as separate check.
+
 **Shot Type:** If checks are separated by shot type
+
 **Difficulty:** If checks are separated by difficulty. In normal mode, it force the difficulty to be static.
+
 **Traps:** You can choose to have traps replacing a percentages of filler items. You can set the weight of each individual trap
 
 ## How to use
