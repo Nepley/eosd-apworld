@@ -18,6 +18,20 @@ class Mode(Choice):
 	option_normal_static = 2
 	default = 0
 
+class PracticeStageUnlock(Choice):
+	"""
+	How the stage unlock are grouped in Practice mode
+    Global: No group
+    By Character: Stage group by character
+    By Shot Type: Stage group by shot type
+    If there is no check by shot type or by difficulty, the option 'By Shot Type' will act as 'By Character' since there is no enough location otherwise.
+    Furthermore, 3 out of the 5 '+25 Power Point' are removed when there is the minimum amount of location
+	"""
+	display_name = "Stage unlock mode"
+	option_global = 0
+	option_by_character = 1
+	option_by_shot_type = 2
+
 class NumberLifeMid(Range):
 	"""Number of life the randomizer expect you to have before facing Meiling and Patchouli"""
 	display_name = "Number of life expected in order to face Meiling and Patchouli"
@@ -69,6 +83,7 @@ class ExtraStage(Choice):
 	Determine if the extra stage is included
     Linear: The extra stage is considered as the 7th stage
     Apart: The extra stage has it's own item fo it to be unlocked
+    This option will follow the rule of how the stage are unlocked in Practice Mode (Global, By Character or By Shot Type)
 	"""
 	display_name = "Determine if the extra stage is included"
 	option_exclude = 0
@@ -94,12 +109,16 @@ class ShotTypeCheck(Toggle):
 	""""If each shot type have their own check and are not just separated by character"""
 	display_name = "Shot Type Check"
 
-class DifficultyCheck(Toggle):
+class DifficultyCheck(Choice):
 	"""
-	If checks are separated by difficulty. The check of the highest difficulty include the check of the lower difficulties that are unlocked
+	If checks are separated by difficulty.
+    If true_with_lower, the check of the highest difficulty include the check of the lower difficulties that are unlocked
     If you are playing in Normal Mode, it will force the difficulty to be static
 	"""
 	display_name = "Difficulty Check"
+	option_false = 0
+	option_true = 1
+	option_true_with_lower = 2
 
 class Goal(Choice):
 	"""If the Extra Stage is included, determine which boss is the goal."""
@@ -110,7 +129,10 @@ class Goal(Choice):
 	default = 0
 
 class EndingRequired(Choice):
-	"""How many time do you need to beat the required boss"""
+	"""
+	How many time do you need to beat the required boss.
+    All Shot Type is only available when check by shot type are enabled. Itt will default to Both Character if it's not the case
+	"""
 	display_name = "How many time do you need to beat the required boss"
 	option_once = 0
 	option_both_characters = 1
@@ -216,6 +238,7 @@ class PowerPointDrainTrap(Range):
 
 game_options: Dict[str, type(Option)] = {
 	"mode": Mode,
+	"practice_stage_unlock": PracticeStageUnlock,
 	"number_life_mid": NumberLifeMid,
 	"number_bomb_mid": NumberBombsMid,
 	"difficulty_mid": DifficultyMid,

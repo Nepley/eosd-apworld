@@ -3,6 +3,10 @@
 This is an implementation of touhou 6 for [Archipelago](https://github.com/ArchipelagoMW/Archipelago)<br />
 Tracker: https://github.com/Nepley/eosd-poptracker
 
+## How does this randomizer work ?
+At the start, you start with only one character and one shot type, with zero resources and with only the Lunatic difficulty.<br />
+Each item will make it easier and easier to clear the differents stages.
+
 ## Locations
 * MidBoss Defeated
 * Boss Defeated
@@ -22,8 +26,8 @@ Tracker: https://github.com/Nepley/eosd-poptracker
 
 ## Options
 **Mode:** Practice or Normal mode.
-With Practice mode, you play stage by stage individually and need to unlock the stages progressively. 
-In normal mode, you need to finish the game normally with the resources only given at the start. Futhermore, only the resources act as a gate. If you put everything at minimum in the yaml, the logic consider you can finish at sphere 1.
+With Practice mode, you play stage by stage individually and need to unlock the stages progressively. You can also choose how the stage unlock are grouped (Globally, By character or By Shot Type)<br />
+In normal mode, you need to finish the game normally with the resources only given at the start. Futhermore, only the resources act as a gate. If you put everything at minimum in the yaml, the logic consider you can finish at sphere 1.<br />
 Normal Mode can be played with a dynamic difficulty or a static one.
 * Dynamic: The difficulty will always be the lowest unlocked and will be able to change during a run. Easy difficulty is disabled as it lock access to the final stage.
 * Static: The difficulty stay to the one you have selected

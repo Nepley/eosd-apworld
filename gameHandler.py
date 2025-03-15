@@ -61,10 +61,10 @@ class gameHandler:
 					stage = 0
 					# If we are not in practice mode, we do not update the stage
 					if practiceMode and self.characters[characters][shots] and self.difficulties[difficulty]:
-						stage = self.stages
+						stage = self.stages[characters][shots]
 					self.gameController.setCharacterDifficulty(characters, shots, difficulty, stage)
 
-	def updatePracticeScore(self, by_shot_type = False, by_difficulty = False, easyStage6 = False):
+	def updatePracticeScore(self, by_shot_type = False, by_difficulty = False,  easyStage6 = False):
 		if by_difficulty:
 			if by_shot_type:
 				for difficulty in range(4):
@@ -341,9 +341,16 @@ class gameHandler:
 			else:
 				self.gameController.setPower(128)
 
-	def addStage(self):
-		if(self.stages < 6):
-			self.stages += 1
+	def addStage(self, extra = False, character = -1, shot_type = -1):
+		character_list = [character] if character > -1 else CHARACTERS
+		shot_type_list = [shot_type] if shot_type > -1 else SHOTS
+
+		for character in character_list:
+			for shot in shot_type_list:
+				if(self.stages[character][shot] < 6):
+					self.stages[character][shot] += 1
+				elif(self.stages[character][shot] == 6 and extra):
+					self.unlockExtraStage(character, shot)
 
 	def addContinue(self):
 		if(self.continues < 3):
@@ -358,7 +365,7 @@ class gameHandler:
 		if update:
 			self.setDifficulty(True)
 
-	def unlockExtraStage(self, character =-1, shot_type = -1):
+	def unlockExtraStage(self, character = -1, shot_type = -1):
 		# Unlock for one character/shot type
 		if character > -1 and shot_type > -1:
 			self.hasExtra[character][shot_type] = True
@@ -454,8 +461,13 @@ class gameHandler:
 		self.lives = 0
 		self.bombs = 0
 		self.power = 0
-		self.stages = 1
 		self.continues = 0
+
+		self.stages = {}
+		for character in CHARACTERS:
+			self.stages[character] = {}
+			for shot in SHOTS:
+				self.stages[character][shot] = 1
 
 		self.endings = {}
 		for character in CHARACTERS:
@@ -561,7 +573,7 @@ class gameHandler:
 			possible = False
 
 		# Check stage
-		if not isNormalMode and (self.gameController.getStage() > self.stages and self.gameController.getStage() != 7) and (self.gameController.getStage() == 7 and self.hasExtra[self.gameController.getCharacter()][self.gameController.getShotType()]):
+		if not isNormalMode and (self.gameController.getStage() > self.stages[self.gameController.getCharacter()][self.gameController.getShotType()] and self.gameController.getStage() != 7) and (self.gameController.getStage() == 7 and self.hasExtra[self.gameController.getCharacter()][self.gameController.getShotType()]):
 			possible = False
 
 		return possible

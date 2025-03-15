@@ -32,6 +32,8 @@ class TouhouContext(CommonContext):
 		self.item_name_to_ap_id = None
 		self.item_ap_id_to_name = None
 		self.previous_location_checked = None
+		self.location_mapping = None
+		self.final_stage_location_ids = None
 
 		self.is_connected = False
 
@@ -41,7 +43,7 @@ class TouhouContext(CommonContext):
 		self.can_trap = True
 
 		self.options = None
-		self.otherDifficulties = True
+		self.otherDifficulties = False
 		self.ExtraMenu = False
 		self.minimalCursor = 0
 
@@ -60,6 +62,8 @@ class TouhouContext(CommonContext):
 			self.all_location_ids = set(args["missing_locations"] + args["checked_locations"])
 			self.options = args["slot_data"] # Yaml Options
 			self.is_connected = True
+			self.otherDifficulties = self.options['difficulty_check'] == DIFFICULTY_WITH_LOWER
+			self.location_mapping, self.final_stage_location_ids = getLocationMapping(self.options['shot_type'], self.options['difficulty_check'] in DIFFICULTY_CHECK)
 
 			if self.handler is not None:
 				self.handler.reset()
@@ -125,94 +129,158 @@ class TouhouContext(CommonContext):
 			await asyncio.sleep(0.5)
 
 		for item in items:
-			match item.item:
-				case 60000: # Life
+			item_id = item.item - STARTING_ID
+			match item_id:
+				case 0: # Life
 					self.handler.addLife()
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60001: # Bomb
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 1: # Bomb
 					self.handler.addBomb()
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60002: # Lower Difficulty
-					updateDifficulty = self.options['mode'] == NORMAL_DYNAMIC_MODE and not self.options['difficulty_check']
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 2: # Lower Difficulty
+					updateDifficulty = self.options['mode'] == NORMAL_DYNAMIC_MODE and self.options['difficulty_check'] == NO_DIFFICULTY_CHECK
 					self.difficulties -= 1
 					self.handler.unlockDifficulty(self.difficulties, updateDifficulty)
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60003: # Reimu A
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 3: # 1 Continue
+					self.handler.addContinue()
+					gotAnyItem = True
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 100: # Reimu A
 					self.handler.unlockCharacter(0, 0)
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60004: # Reimu B
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 101: # Reimu B
 					self.handler.unlockCharacter(0, 1)
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60005: # Marisa A
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 102: # Marisa A
 					self.handler.unlockCharacter(1, 0)
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60006: # Marisa B
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 103: # Marisa B
 					self.handler.unlockCharacter(1, 1)
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60013: # Next Stage
-					isExtraStageLinear = self.options['extra_stage'] == 1
-					if self.handler.stages < 6:
-						self.handler.addStage()
-					elif self.handler.stages >= 6 and isExtraStageLinear:
-						self.handler.unlockExtraStage()
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 200: # Next Stage
+					isExtraStageLinear = self.options['extra_stage'] == EXTRA_LINEAR
+					self.handler.addStage(isExtraStageLinear)
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60014 | 60018: # Ending Normal
-					character = REIMU if item.item == 60014 else MARISA
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 201: # [Reimu] Next Stage
+					isExtraStageLinear = self.options['extra_stage'] == EXTRA_LINEAR
+					self.handler.addStage(isExtraStageLinear, REIMU)
+					gotAnyItem = True
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 202: # [Marisa] Next Stage
+					isExtraStageLinear = self.options['extra_stage'] == EXTRA_LINEAR
+					self.handler.addStage(isExtraStageLinear, MARISA)
+					gotAnyItem = True
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 203: # [Reimu A] Next Stage
+					isExtraStageLinear = self.options['extra_stage'] == EXTRA_LINEAR
+					self.handler.addStage(isExtraStageLinear, REIMU, SHOT_A)
+					gotAnyItem = True
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 204: # [Reimu B] Next Stage
+					isExtraStageLinear = self.options['extra_stage'] == EXTRA_LINEAR
+					self.handler.addStage(isExtraStageLinear, REIMU, SHOT_B)
+					gotAnyItem = True
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 205: # [Marisa A] Next Stage
+					isExtraStageLinear = self.options['extra_stage'] == EXTRA_LINEAR
+					self.handler.addStage(isExtraStageLinear, MARISA, SHOT_A)
+					gotAnyItem = True
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 206: # [Marisa B] Next Stage
+					isExtraStageLinear = self.options['extra_stage'] == EXTRA_LINEAR
+					self.handler.addStage(isExtraStageLinear, MARISA, SHOT_B)
+					gotAnyItem = True
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 207: # 25 Power Point
+					self.handler.add25Power()
+					gotAnyItem = True
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 208: # Extra Stage
+					isExtraStageApart = self.options['extra_stage'] == EXTRA_APART
+					if isExtraStageApart:
+						self.handler.unlockExtraStage()
+						gotAnyItem = True
+						self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 209: # [Reimu] Extra Stage
+					isExtraStageApart = self.options['extra_stage'] == EXTRA_APART
+					if isExtraStageApart:
+						self.handler.unlockExtraStage(REIMU)
+						gotAnyItem = True
+						self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 210: # [Marisa] Extra Stage
+					isExtraStageApart = self.options['extra_stage'] == EXTRA_APART
+					if isExtraStageApart:
+						self.handler.unlockExtraStage(MARISA)
+						gotAnyItem = True
+						self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 211: # [Reimu A] Extra Stage
+					isExtraStageApart = self.options['extra_stage'] == EXTRA_APART
+					if isExtraStageApart:
+						self.handler.unlockExtraStage(REIMU, SHOT_A)
+						gotAnyItem = True
+						self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 212: # [Reimu B] Extra Stage
+					isExtraStageApart = self.options['extra_stage'] == EXTRA_APART
+					if isExtraStageApart:
+						self.handler.unlockExtraStage(REIMU, SHOT_B)
+						gotAnyItem = True
+						self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 213: # [Marisa A] Extra Stage
+					isExtraStageApart = self.options['extra_stage'] == EXTRA_APART
+					if isExtraStageApart:
+						self.handler.unlockExtraStage(MARISA, SHOT_A)
+						gotAnyItem = True
+						self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 214: # [Marisa B] Extra Stage
+					isExtraStageApart = self.options['extra_stage'] == EXTRA_APART
+					if isExtraStageApart:
+						self.handler.unlockExtraStage(MARISA, SHOT_B)
+						gotAnyItem = True
+						self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 300 | 301: # Ending Normal
+					character = REIMU if item_id == 300 else MARISA
 					self.handler.addEnding(character, ENDING_NORMAL)
 					if self.checkVictory():
 						await self.send_msgs([{"cmd": 'StatusUpdate', "status": 30}])
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60019 | 60020: # Ending Extra
-					character = REIMU if item.item == 60019 else MARISA
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 302 | 303: # Ending Extra
+					character = REIMU if item_id == 302 else MARISA
 					self.handler.addEnding(character, ENDING_EXTRA)
 					if self.checkVictory():
 						await self.send_msgs([{"cmd": 'StatusUpdate', "status": 30}])
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60015: # 25 Power Point
-					self.handler.add25Power()
-					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60016: # 1 Continue
-					self.handler.addContinue()
-					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60017: # Extra Stage
-					isExtraStageApart = self.options['extra_stage'] == 2
-					if isExtraStageApart:
-						self.handler.unlockExtraStage()
-					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60030: # 1 Power Point
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 400: # 1 Power Point
 					self.handler.add1Power()
 					gotAnyItem = True
-					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item.item], "color": FLASHING_TEXT})
-				case 60040: # Max Rank
+					self.msgQueue.append({"msg": SHORT_ITEM_NAME[item_id], "color": FLASHING_TEXT})
+				case 500: # Max Rank
 					self.traps["max_rank"] += 1
-				case 60041: # -50% Power Point
+				case 501: # -50% Power Point
 					self.traps["power_point"] += 1
-				case 60042: # -1 Bomb
+				case 502: # -1 Bomb
 					self.traps["bomb"] += 1
-				case 60043: # -1 Life
+				case 503: # -1 Life
 					self.traps["life"] += 1
-				case 60044: # No Focus
+				case 504: # No Focus
 					self.traps["no_focus"] += 1
-				case 60045: # Reverse Movement
+				case 505: # Reverse Movement
 					self.traps["reverse_control"] += 1
-				case 60046: # Aya Speed
+				case 506: # Aya Speed
 					self.traps["aya_speed"] += 1
-				case 60047: # Freeze
+				case 507: # Freeze
 					self.traps["freeze"] += 1
-				case 60048: # Power Point Drain
+				case 508: # Power Point Drain
 					self.traps["power_point_drain"] += 1
 				case _:
 					print(f"Unknown Item: {item}")
@@ -227,33 +295,22 @@ class TouhouContext(CommonContext):
 		"""
 		Check if any locations has been checked since last called, if a location has ben checked, we send a message and update our list of checked location
 		"""
-		shot_type = self.options['shot_type']
-		difficulty_check = self.options['difficulty_check']
 		new_locations = []
 
-		if difficulty_check:
-			if shot_type:
-				locations = DIFFICULTY_SHOT_LOCATIONS_MAPPING
-			else:
-				locations = DIFFICULTY_LOCATIONS_MAPPING
-		else:
-			if shot_type:
-				locations = SHOT_LOCATIONS_MAPPING
-			else:
-				locations = LOCATIONS_MAPPING
-
-		for id, map in locations.items():
+		for id, map in self.location_mapping.items():
 			# Check if the boss is beaten and the location is not already checked
 			if self.handler.isBossBeaten(*map) and id not in self.previous_location_checked:
 				# We add it to the list of checked locations
 				new_locations.append(id)
-
 				# If we are in normal mode, the extra stage is set to linear and the stage 6 has just been cleared. We unlock it if it's not already.
-				if not self.handler.canExtra() and self.options['mode'] in NORMAL_MODE and self.options['extra_stage'] == EXTRA_LINEAR and id in [91014, 91031, 91059, 91080, 91101, 91122]:
+				if not self.handler.canExtra() and self.options['mode'] in NORMAL_MODE and self.options['extra_stage'] == EXTRA_LINEAR and id in self.final_stage_location_ids:
 					self.handler.unlockExtraStage()
 			# If the location is not checked but it was marked as checked, we set it as beaten (For exemple, when the client is reconnected)
 			elif id in self.previous_location_checked and not self.handler.isBossBeaten(*map):
-				self.handler.setBossBeaten(*map)
+				# If the difficulty of the location is at -1 but we have difficulty check, we do not set this locations to not cause any problem
+				# Same thing for the shot type
+				if (not self.options['difficulty_check'] or map[-1] != -1) and (not self.options['shot_type'] or map[-2] != -1):
+					self.handler.setBossBeaten(*map)
 
 		# If we have new locations, we send them to the server and add them to the list of checked locations
 		if new_locations:
@@ -279,7 +336,7 @@ class TouhouContext(CommonContext):
 		Give the resources to the player
 		"""
 		isNormalMode = self.options['mode'] == NORMAL_DYNAMIC_MODE or self.options['mode'] == NORMAL_STATIC_MODE
-		autoDifficulty = not self.options['difficulty_check'] and self.options['mode'] == NORMAL_DYNAMIC_MODE
+		autoDifficulty = self.options['difficulty_check'] == NO_DIFFICULTY_CHECK and self.options['mode'] == NORMAL_DYNAMIC_MODE
 		return self.handler.initResources(isNormalMode, autoDifficulty)
 
 	def updateStageList(self):
@@ -287,7 +344,7 @@ class TouhouContext(CommonContext):
 		Update the stage list in practice mode
 		"""
 		shot_type = self.options['shot_type']
-		difficulty_check = self.options['difficulty_check']
+		difficulty_check = self.options['difficulty_check'] in DIFFICULTY_CHECK
 		mode = self.options['mode']
 
 		self.handler.updateStageList(mode == PRACTICE_MODE)
@@ -298,37 +355,41 @@ class TouhouContext(CommonContext):
 		Check if the player has won the game.
 		"""
 		goal = self.options['goal']
-		endingRequired = self.options['ending_required']
+		type = self.options['ending_required']
 		shot_type = self.options['shot_type']
 		extra = self.options['extra_stage']
-		victory = False
 
-		if not shot_type and endingRequired == 2:
-			endingRequired = 1
+		if not shot_type and type == ALL_SHOT_TYPE_ENDING:
+			type = ALL_CHARACTER_ENDING
 
-		if goal == 0 or extra == 0: # Normal
-			if endingRequired == 0: # One
-				victory = self.handler.endings[REIMU][ENDING_NORMAL] or self.handler.endings[MARISA][ENDING_NORMAL]
-			elif endingRequired == 1: # Both characters
-				victory = self.handler.endings[REIMU][ENDING_NORMAL] and self.handler.endings[MARISA][ENDING_NORMAL]
-			elif endingRequired == 2: # All Shot type
-				victory = self.handler.endings[REIMU][ENDING_NORMAL] >= 2 and self.handler.endings[MARISA][ENDING_NORMAL] >= 2
-		elif goal == 1: # Extra
-			if endingRequired == 0: # One
-				victory = self.handler.endings[REIMU][ENDING_EXTRA] or self.handler.endings[MARISA][ENDING_EXTRA]
-			elif endingRequired == 1: # Both characters
-				victory = self.handler.endings[REIMU][ENDING_EXTRA] and self.handler.endings[MARISA][ENDING_EXTRA]
-			elif endingRequired == 2: # All Shot type
-				victory = self.handler.endings[REIMU][ENDING_EXTRA] >= 2 and self.handler.endings[MARISA][ENDING_EXTRA] >= 2
-		elif goal == 2: # Both
-			if endingRequired == 0: # One
-				victory = (self.handler.endings[REIMU][ENDING_NORMAL] or self.handler.endings[MARISA][ENDING_NORMAL]) and (self.handler.endings[REIMU][ENDING_EXTRA] or self.handler.endings[MARISA][ENDING_EXTRA])
-			elif endingRequired == 1: # Both characters
-				victory = (self.handler.endings[REIMU][ENDING_NORMAL] and self.handler.endings[MARISA][ENDING_NORMAL]) and (self.handler.endings[REIMU][ENDING_EXTRA] and self.handler.endings[MARISA][ENDING_EXTRA])
-			elif endingRequired == 2: # All Shot type
-				victory = (self.handler.endings[REIMU][ENDING_NORMAL] >= 2 and self.handler.endings[MARISA][ENDING_NORMAL] >= 2) and (self.handler.endings[REIMU][ENDING_EXTRA] >= 2 and self.handler.endings[MARISA][ENDING_EXTRA] >= 2)
+		normal_victory = True
+		extra_victory = True
 
-		return victory
+		if (goal == ENDING_NORMAL or goal == ENDING_BOTH) or extra == NO_EXTRA:
+			if type == ONE_ENDING:
+				normal_victory = False
+				for character in CHARACTERS:
+					normal_victory = normal_victory or self.handler.endings[character][ENDING_NORMAL]
+			elif type == ALL_CHARACTER_ENDING:
+				for character in CHARACTERS:
+					normal_victory = normal_victory and self.handler.endings[character][ENDING_NORMAL]
+			elif type == ALL_SHOT_TYPE_ENDING:
+				for character in CHARACTERS:
+					normal_victory = normal_victory and self.handler.endings[character][ENDING_NORMAL] >= len(SHOTS)
+
+		if (goal == ENDING_EXTRA or goal == ENDING_BOTH) and extra != NO_EXTRA:
+			if type == ONE_ENDING:
+				extra_victory = False
+				for character in CHARACTERS:
+					extra_victory = extra_victory or self.handler.endings[character][ENDING_EXTRA]
+			elif type == ALL_CHARACTER_ENDING:
+				for character in CHARACTERS:
+					extra_victory = extra_victory and self.handler.endings[character][ENDING_EXTRA]
+			elif type == ALL_SHOT_TYPE_ENDING:
+				for character in CHARACTERS:
+					extra_victory = extra_victory and self.handler.endings[character][ENDING_EXTRA] >= len(SHOTS)
+
+		return normal_victory and extra_victory
 
 	async def main_loop(self):
 		"""
@@ -557,6 +618,9 @@ class TouhouContext(CommonContext):
 			onGoingDeathLink = False
 			inLevel = False
 			currentMisses = 0
+			currentLives = 0
+			hasDied = False
+
 			while not self.exit_event.is_set() and self.handler.gameController and not self.inError:
 				await asyncio.sleep(0.5)
 				if self.handler.getGameMode() == IN_GAME:
@@ -564,29 +628,51 @@ class TouhouContext(CommonContext):
 					if not inLevel:
 						inLevel = True
 						currentMisses = self.handler.getMisses()
+						currentLives = self.handler.getCurrentLives()
 						onGoingDeathLink = False
 						self.pending_death_link = False
+						deathCounter = 0
+						hasDied = False
 
 					# If a death link is sent, we set the flag
 					if self.pending_death_link and not onGoingDeathLink:
 						onGoingDeathLink = True
 
-					# If a death has occured in game
+					# If a misses has been added, that mean the player has been killed and we check if it was because of the death link
+					# (Receiving a death link is checked by misses as it's more reliable and the player could have deathbomb the death link)
 					if currentMisses < self.handler.getMisses():
 						# If the player is killed by a death link, we tell the loop it's done
 						if onGoingDeathLink:
 							onGoingDeathLink = False
 							self.pending_death_link = False
-						# If the player is killed by the game, we send the death link
 						else:
-							await self.send_death_link()
+							hasDied = True
+							deathCounter = 3
 
 						currentMisses += 1
 					# If no death has occured but a death link is pending, we try to kill the player
 					elif self.pending_death_link:
 						await self.handler.killPlayer()
+
+					# If the number of lives has changed
+					# (Sending a death link is done by checking lives in order to not send one when deathbombing)
+					if self.handler.getCurrentLives() != currentLives:
+						# If it's lower and there is no death link on going, then a death has occured and we send a death link
+						if self.handler.getCurrentLives() < currentLives and hasDied:
+							await self.send_death_link()
+
+						currentLives = self.handler.getCurrentLives()
+					elif hasDied: # If the player has deathbomb
+						if deathCounter > 0:
+							deathCounter -= 1
+
+						if deathCounter <= 0:
+							hasDied = False
 				else:
 					inLevel = False
+					if hasDied:
+						await self.send_death_link()
+						hasDied = False
 		except Exception as e:
 			print(f"ERROR: {e}")
 			self.inError = True

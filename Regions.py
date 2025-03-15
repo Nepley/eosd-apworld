@@ -1,563 +1,88 @@
-from typing import Dict, List, NamedTuple, Optional
-
 from BaseClasses import MultiWorld, Region
 from .Locations import TLocation, location_table
+from .Variables import *
 
-class TRegionData(NamedTuple):
-	locations: Optional[List[str]]
-	region_exits: Optional[List[str]]
+def get_regions(shot_type, difficulty_check, extra):
+	regions = {}
+	characters = CHARACTERS_LIST if not shot_type else SHOT_TYPE_LIST
+	regions["Menu"] = {"locations": None, "exits": characters}
+	if difficulty_check not in DIFFICULTY_CHECK:
+		for character in characters:
+			regions[character] = {"locations": None, "exits": [f"[{character}] Early", f"[{character}] Mid", f"[{character}] Late"]}
+			regions[f"[{character}] Early"] = {"locations": None, "exits": [f"[{character}] Stage 1", f"[{character}] Stage 2"]}
+			regions[f"[{character}] Mid"] = {"locations": None, "exits": [f"[{character}] Stage 3", f"[{character}] Stage 4"]}
+			regions[f"[{character}] Late"] = {"locations": None, "exits": [f"[{character}] Stage 5", f"[{character}] Stage 6"]}
+
+			level = 0
+			for stage in STAGES_LIST:
+				level += 1
+				if level > 6:
+					continue
+				regions[f"[{character}] Stage {level}"] = {"locations": [f"[{character}] {stage[0]}", f"[{character}] {stage[1]}", f"[{character}] Stage {level} Clear"], "exits": None}
+
+			if extra:
+				regions[character]["exits"].append(f"[{character}] Extra")
+				regions[f"[{character}] Extra"] = {"locations": [], "exits": [f"[{character}] Stage Extra"]}
+				regions[f"[{character}] Stage Extra"] = {"locations": [f"[{character}] Stage Extra Clear"], "exits": None}
+
+				for extra_check in EXTRA_CHECKS:
+					regions[f"[{character}] Stage Extra"]["locations"].append(f"[{character}] {extra_check}")
+	else:
+		for character in characters:
+			regions[character] = {"locations": None, "exits": [f"[{character}] Early", f"[{character}] Mid", f"[{character}] Late"]}
+			regions[f"[{character}] Early"] = {"locations": None, "exits": [f"[{character}] Stage 1", f"[{character}] Stage 2"]}
+			regions[f"[{character}] Mid"] = {"locations": None, "exits": [f"[{character}] Stage 3", f"[{character}] Stage 4"]}
+			regions[f"[{character}] Late"] = {"locations": None, "exits": [f"[{character}] Stage 5", f"[{character}] Stage 6"]}
+
+			level = 0
+			for stage in STAGES_LIST:
+				level += 1
+				if level > 6:
+					continue
+				regions[f"[{character}] Stage {level}"] = {"locations": [f"[{character}] Stage {level} Clear"], "exits": None}
+
+			if extra:
+				regions[character]["exits"].append(f"[{character}] Extra")
+				regions[f"[{character}] Extra"] = {"locations": None, "exits": [f"[{character}] Stage Extra"]}
+				regions[f"[{character}] Stage Extra"] = {"locations": [f"[{character}] Stage Extra Clear"], "exits": None}
+				for extra in EXTRA_CHECKS:
+					regions[f"[{character}] Stage Extra"]["locations"].append(f"[{character}] {extra}")
+
+		for difficulty in DIFFICULTY_LIST:
+			for character in characters:
+				regions[f"[{character}] Early"]["exits"].append(f"[{difficulty}][{character}] Stage 1")
+				regions[f"[{character}] Early"]["exits"].append(f"[{difficulty}][{character}] Stage 2")
+				regions[f"[{character}] Mid"]["exits"].append(f"[{difficulty}][{character}] Stage 3")
+				regions[f"[{character}] Mid"]["exits"].append(f"[{difficulty}][{character}] Stage 4")
+				regions[f"[{character}] Late"]["exits"].append(f"[{difficulty}][{character}] Stage 5")
+				if difficulty != "Easy":
+					regions[f"[{character}] Late"]["exits"].append(f"[{difficulty}][{character}] Stage 6")
+
+				level = 0
+				for stage in STAGES_LIST:
+					level += 1
+					if level > 6 or (level > 5 and difficulty == "Easy"):
+						continue
+					regions[f"[{difficulty}][{character}] Stage {level}"] = {"locations": [f"[{difficulty}][{character}] {stage[0]}", f"[{difficulty}][{character}] {stage[1]}"], "exits": None}
+
+	return regions
 
 def create_regions(multiworld: MultiWorld, player: int, options):
-	regionsNoShotType: Dict[str, TRegionData] = {
-		"Menu":            	TRegionData(None, ["Reimu", "Marisa"]),
-		"Reimu":            TRegionData(None, ["Reimu - Early", "Reimu - Mid", "Reimu - End", "Reimu - Extra"]),
-		"Marisa":           TRegionData(None, ["Marisa - Early", "Marisa - Mid", "Marisa - End", "Marisa - Extra"]),
-		"Reimu - Early":    TRegionData(["[Reimu] Rumia - MidBoss",
-										"[Reimu] Rumia Defeated",
-										"[Reimu] Stage 1 Clear",
-										"[Reimu] Daiyousei Defeated",
-										"[Reimu] Cirno Defeated",
-										"[Reimu] Stage 2 Clear"],   []),
-		"Reimu - Mid":      TRegionData(["[Reimu] Meiling - MidBoss",
-										"[Reimu] Meiling Defeated",
-										"[Reimu] Stage 3 Clear",
-										"[Reimu] Koakuma Defeated",
-										"[Reimu] Patchouli Defeated",
-										"[Reimu] Stage 4 Clear"],   []),
-		"Reimu - End":      TRegionData(["[Reimu] Sakuya - MidBoss 1",
-										"[Reimu] Sakuya Defeated",
-										"[Reimu] Stage 5 Clear",
-										"[Reimu] Sakuya - MidBoss 2",
-										"[Reimu] Remilia Defeated",
-										"[Reimu] Stage 6 Clear"],   []),
-		"Reimu - Extra":    TRegionData(["[Reimu] Patchouli - MidBoss",
-										"[Reimu] Flandre Defeated",
-										"[Reimu] Stage Extra Clear"],   []),
-		"Marisa - Early":   TRegionData(["[Marisa] Rumia - MidBoss",
-										"[Marisa] Rumia Defeated",
-										"[Marisa] Stage 1 Clear",
-										"[Marisa] Daiyousei Defeated",
-										"[Marisa] Cirno Defeated",
-										"[Marisa] Stage 2 Clear"],   ["Marisa - Mid"]),
-		"Marisa - Mid":     TRegionData(["[Marisa] Meiling - MidBoss",
-										"[Marisa] Meiling Defeated",
-										"[Marisa] Stage 3 Clear",
-										"[Marisa] Koakuma Defeated",
-										"[Marisa] Patchouli Defeated",
-										"[Marisa] Stage 4 Clear"],   ["Marisa - End"]),
-		"Marisa - End":     TRegionData(["[Marisa] Sakuya - MidBoss 1",
-										"[Marisa] Sakuya Defeated",
-										"[Marisa] Stage 5 Clear",
-										"[Marisa] Sakuya - MidBoss 2",
-										"[Marisa] Remilia Defeated",
-										"[Marisa] Stage 6 Clear"],   []),
-		"Marisa - Extra":   TRegionData(["[Marisa] Patchouli - MidBoss",
-										"[Marisa] Flandre Defeated",
-										"[Marisa] Stage Extra Clear"],   []),
-	}
-
-	regionsShotType: Dict[str, TRegionData] = {
-		"Menu":            		TRegionData(None, ["Reimu - A", "Marisa - A", "Reimu - B", "Marisa - B"]),
-		"Reimu - A":            TRegionData(None, ["Reimu - A - Early", "Reimu - A - Mid", "Reimu - A - End", "Reimu - A - Extra"]),
-		"Reimu - B":            TRegionData(None, ["Reimu - B - Early", "Reimu - B - Mid", "Reimu - B - End", "Reimu - B - Extra"]),
-		"Marisa - A":           TRegionData(None, ["Marisa - A - Early", "Marisa - A - Mid", "Marisa - A - End", "Marisa - A - Extra"]),
-		"Marisa - B":           TRegionData(None, ["Marisa - B - Early", "Marisa - B - Mid", "Marisa - B - End", "Marisa - B - Extra"]),
-
-		"Reimu - A - Early":   TRegionData(["[Reimu A] Rumia - MidBoss",
-										"[Reimu A] Rumia Defeated",
-										"[Reimu A] Stage 1 Clear",
-										"[Reimu A] Daiyousei Defeated",
-										"[Reimu A] Cirno Defeated",
-										"[Reimu A] Stage 2 Clear"],   []),
-		"Reimu - A - Mid":     TRegionData(["[Reimu A] Meiling - MidBoss",
-										"[Reimu A] Meiling Defeated",
-										"[Reimu A] Stage 3 Clear",
-										"[Reimu A] Koakuma Defeated",
-										"[Reimu A] Patchouli Defeated",
-										"[Reimu A] Stage 4 Clear"],   []),
-		"Reimu - A - End":     TRegionData(["[Reimu A] Sakuya - MidBoss 1",
-										"[Reimu A] Sakuya Defeated",
-										"[Reimu A] Stage 5 Clear",
-										"[Reimu A] Sakuya - MidBoss 2",
-										"[Reimu A] Remilia Defeated",
-										"[Reimu A] Stage 6 Clear"],   []),
-		"Reimu - A - Extra":   TRegionData(["[Reimu A] Patchouli - MidBoss",
-										"[Reimu A] Flandre Defeated",
-										"[Reimu A] Stage Extra Clear"],   []),
-
-		"Reimu - B - Early":   TRegionData(["[Reimu B] Rumia - MidBoss",
-										"[Reimu B] Rumia Defeated",
-										"[Reimu B] Stage 1 Clear",
-										"[Reimu B] Daiyousei Defeated",
-										"[Reimu B] Cirno Defeated",
-										"[Reimu B] Stage 2 Clear"],   []),
-		"Reimu - B - Mid":     TRegionData(["[Reimu B] Meiling - MidBoss",
-										"[Reimu B] Meiling Defeated",
-										"[Reimu B] Stage 3 Clear",
-										"[Reimu B] Koakuma Defeated",
-										"[Reimu B] Patchouli Defeated",
-										"[Reimu B] Stage 4 Clear"],   []),
-		"Reimu - B - End":     TRegionData(["[Reimu B] Sakuya - MidBoss 1",
-										"[Reimu B] Sakuya Defeated",
-										"[Reimu B] Stage 5 Clear",
-										"[Reimu B] Sakuya - MidBoss 2",
-										"[Reimu B] Remilia Defeated",
-										"[Reimu B] Stage 6 Clear"],   []),
-		"Reimu - B - Extra":   TRegionData(["[Reimu B] Patchouli - MidBoss",
-										"[Reimu B] Flandre Defeated",
-										"[Reimu B] Stage Extra Clear"],   []),
-
-		"Marisa - A - Early":  TRegionData(["[Marisa A] Rumia - MidBoss",
-										"[Marisa A] Rumia Defeated",
-										"[Marisa A] Stage 1 Clear",
-										"[Marisa A] Daiyousei Defeated",
-										"[Marisa A] Cirno Defeated",
-										"[Marisa A] Stage 2 Clear"],   []),
-		"Marisa - A - Mid":    TRegionData(["[Marisa A] Meiling - MidBoss",
-										"[Marisa A] Meiling Defeated",
-										"[Marisa A] Stage 3 Clear",
-										"[Marisa A] Koakuma Defeated",
-										"[Marisa A] Patchouli Defeated",
-										"[Marisa A] Stage 4 Clear"],   []),
-		"Marisa - A - End":    TRegionData(["[Marisa A] Sakuya - MidBoss 1",
-										"[Marisa A] Sakuya Defeated",
-										"[Marisa A] Stage 5 Clear",
-										"[Marisa A] Sakuya - MidBoss 2",
-										"[Marisa A] Remilia Defeated",
-										"[Marisa A] Stage 6 Clear"],   []),
-		"Marisa - A - Extra":  TRegionData(["[Marisa A] Patchouli - MidBoss",
-										"[Marisa A] Flandre Defeated",
-										"[Marisa A] Stage Extra Clear"],   []),
-
-		"Marisa - B - Early":  TRegionData(["[Marisa B] Rumia - MidBoss",
-										"[Marisa B] Rumia Defeated",
-										"[Marisa B] Stage 1 Clear",
-										"[Marisa B] Daiyousei Defeated",
-										"[Marisa B] Cirno Defeated",
-										"[Marisa B] Stage 2 Clear"],   []),
-		"Marisa - B - Mid":    TRegionData(["[Marisa B] Meiling - MidBoss",
-										"[Marisa B] Meiling Defeated",
-										"[Marisa B] Stage 3 Clear",
-										"[Marisa B] Koakuma Defeated",
-										"[Marisa B] Patchouli Defeated",
-										"[Marisa B] Stage 4 Clear"],   []),
-		"Marisa - B - End":    TRegionData(["[Marisa B] Sakuya - MidBoss 1",
-										"[Marisa B] Sakuya Defeated",
-										"[Marisa B] Stage 5 Clear",
-										"[Marisa B] Sakuya - MidBoss 2",
-										"[Marisa B] Remilia Defeated",
-										"[Marisa B] Stage 6 Clear"],   []),
-		"Marisa - B - Extra":  TRegionData(["[Marisa B] Patchouli - MidBoss",
-										"[Marisa B] Flandre Defeated",
-										"[Marisa B] Stage Extra Clear"],   []),
-	}
-
-	regionsNoShotTypeWdifficutly: Dict[str, TRegionData] = {
-		"Menu":            	TRegionData(None, ["Reimu", "Marisa"]),
-		"Reimu":            TRegionData(None, ["Reimu - Early", "Reimu - Mid", "Reimu - End",
-										  		"Easy - Reimu - Early", "Easy - Reimu - Mid", "Easy - Reimu - End",
-										  		"Normal - Reimu - Early", "Normal - Reimu - Mid", "Normal - Reimu - End",
-												"Hard - Reimu - Early", "Hard - Reimu - Mid", "Hard - Reimu - End",
-												"Lunatic - Reimu - Early", "Lunatic - Reimu - Mid", "Lunatic - Reimu - End",
-										  		"Reimu - Extra"]),
-		"Marisa":           TRegionData(None, ["Marisa - Early", "Marisa - Mid", "Marisa - End",
-												"Easy - Marisa - Early", "Easy - Marisa - Mid", "Easy - Marisa - End",
-												"Normal - Marisa - Early", "Normal - Marisa - Mid", "Normal - Marisa - End",
-												"Hard - Marisa - Early", "Hard - Marisa - Mid", "Hard - Marisa - End",
-												"Lunatic - Marisa - Early", "Lunatic - Marisa - Mid", "Lunatic - Marisa - End",
-										  		"Marisa - Extra"]),
-		"Reimu - Early":  TRegionData(["[Reimu] Stage 1 Clear",
-										"[Reimu] Stage 2 Clear"],   []),
-		"Reimu - Mid":    TRegionData(["[Reimu] Stage 3 Clear",
-										"[Reimu] Stage 4 Clear"],   []),
-		"Reimu - End":    TRegionData(["[Reimu] Stage 5 Clear",
-										"[Reimu] Stage 6 Clear"],   []),
-		"Easy - Reimu - Early":    TRegionData(["[Easy][Reimu] Rumia - MidBoss",
-										"[Easy][Reimu] Rumia Defeated",
-										"[Easy][Reimu] Daiyousei Defeated",
-										"[Easy][Reimu] Cirno Defeated"],   []),
-		"Easy - Reimu - Mid":      TRegionData(["[Easy][Reimu] Meiling - MidBoss",
-										"[Easy][Reimu] Meiling Defeated",
-										"[Easy][Reimu] Koakuma Defeated",
-										"[Easy][Reimu] Patchouli Defeated"],   []),
-		"Easy - Reimu - End":      TRegionData(["[Easy][Reimu] Sakuya - MidBoss 1",
-										"[Easy][Reimu] Sakuya Defeated"],   []),
-		"Normal - Reimu - Early":    TRegionData(["[Normal][Reimu] Rumia - MidBoss",
-										"[Normal][Reimu] Rumia Defeated",
-										"[Normal][Reimu] Daiyousei Defeated",
-										"[Normal][Reimu] Cirno Defeated"],   []),
-		"Normal - Reimu - Mid":      TRegionData(["[Normal][Reimu] Meiling - MidBoss",
-										"[Normal][Reimu] Meiling Defeated",
-										"[Normal][Reimu] Koakuma Defeated",
-										"[Normal][Reimu] Patchouli Defeated"],   []),
-		"Normal - Reimu - End":      TRegionData(["[Normal][Reimu] Sakuya - MidBoss 1",
-										"[Normal][Reimu] Sakuya Defeated",
-										"[Normal][Reimu] Sakuya - MidBoss 2",
-										"[Normal][Reimu] Remilia Defeated"],   []),
-		"Hard - Reimu - Early":    TRegionData(["[Hard][Reimu] Rumia - MidBoss",
-										"[Hard][Reimu] Rumia Defeated",
-										"[Hard][Reimu] Daiyousei Defeated",
-										"[Hard][Reimu] Cirno Defeated"],   []),
-		"Hard - Reimu - Mid":      TRegionData(["[Hard][Reimu] Meiling - MidBoss",
-										"[Hard][Reimu] Meiling Defeated",
-										"[Hard][Reimu] Koakuma Defeated",
-										"[Hard][Reimu] Patchouli Defeated"],   []),
-		"Hard - Reimu - End":      TRegionData(["[Hard][Reimu] Sakuya - MidBoss 1",
-										"[Hard][Reimu] Sakuya Defeated",
-										"[Hard][Reimu] Sakuya - MidBoss 2",
-										"[Hard][Reimu] Remilia Defeated"],   []),
-		"Lunatic - Reimu - Early":    TRegionData(["[Lunatic][Reimu] Rumia - MidBoss",
-										"[Lunatic][Reimu] Rumia Defeated",
-										"[Lunatic][Reimu] Daiyousei Defeated",
-										"[Lunatic][Reimu] Cirno Defeated"],   []),
-		"Lunatic - Reimu - Mid":      TRegionData(["[Lunatic][Reimu] Meiling - MidBoss",
-										"[Lunatic][Reimu] Meiling Defeated",
-										"[Lunatic][Reimu] Koakuma Defeated",
-										"[Lunatic][Reimu] Patchouli Defeated"],   []),
-		"Lunatic - Reimu - End":      TRegionData(["[Lunatic][Reimu] Sakuya - MidBoss 1",
-										"[Lunatic][Reimu] Sakuya Defeated",
-										"[Lunatic][Reimu] Sakuya - MidBoss 2",
-										"[Lunatic][Reimu] Remilia Defeated"],   []),
-		"Reimu - Extra":    TRegionData(["[Reimu] Patchouli - MidBoss",
-										"[Reimu] Flandre Defeated",
-										"[Reimu] Stage Extra Clear"],   []),
-
-		"Marisa - Early":  TRegionData(["[Marisa] Stage 1 Clear",
-										"[Marisa] Stage 2 Clear"],   []),
-		"Marisa - Mid":    TRegionData(["[Marisa] Stage 3 Clear",
-										"[Marisa] Stage 4 Clear"],   []),
-		"Marisa - End":    TRegionData(["[Marisa] Stage 5 Clear",
-										"[Marisa] Stage 6 Clear"],   []),
-		"Easy - Marisa - Early":   TRegionData(["[Easy][Marisa] Rumia - MidBoss",
-										"[Easy][Marisa] Rumia Defeated",
-										"[Easy][Marisa] Daiyousei Defeated",
-										"[Easy][Marisa] Cirno Defeated"],   ["Marisa - Mid"]),
-		"Easy - Marisa - Mid":     TRegionData(["[Easy][Marisa] Meiling - MidBoss",
-										"[Easy][Marisa] Meiling Defeated",
-										"[Easy][Marisa] Koakuma Defeated",
-										"[Easy][Marisa] Patchouli Defeated"],   ["Marisa - End"]),
-		"Easy - Marisa - End":     TRegionData(["[Easy][Marisa] Sakuya - MidBoss 1",
-										"[Easy][Marisa] Sakuya Defeated"],   []),
-		"Normal - Marisa - Early":   TRegionData(["[Normal][Marisa] Rumia - MidBoss",
-										"[Normal][Marisa] Rumia Defeated",
-										"[Normal][Marisa] Daiyousei Defeated",
-										"[Normal][Marisa] Cirno Defeated"],   ["Marisa - Mid"]),
-		"Normal - Marisa - Mid":     TRegionData(["[Normal][Marisa] Meiling - MidBoss",
-										"[Normal][Marisa] Meiling Defeated",
-										"[Normal][Marisa] Koakuma Defeated",
-										"[Normal][Marisa] Patchouli Defeated"],   ["Marisa - End"]),
-		"Normal - Marisa - End":     TRegionData(["[Normal][Marisa] Sakuya - MidBoss 1",
-										"[Normal][Marisa] Sakuya Defeated",
-										"[Normal][Marisa] Sakuya - MidBoss 2",
-										"[Normal][Marisa] Remilia Defeated"],   []),
-		"Hard - Marisa - Early":   TRegionData(["[Hard][Marisa] Rumia - MidBoss",
-										"[Hard][Marisa] Rumia Defeated",
-										"[Hard][Marisa] Daiyousei Defeated",
-										"[Hard][Marisa] Cirno Defeated"],   ["Marisa - Mid"]),
-		"Hard - Marisa - Mid":     TRegionData(["[Hard][Marisa] Meiling - MidBoss",
-										"[Hard][Marisa] Meiling Defeated",
-										"[Hard][Marisa] Koakuma Defeated",
-										"[Hard][Marisa] Patchouli Defeated"],   ["Marisa - End"]),
-		"Hard - Marisa - End":     TRegionData(["[Hard][Marisa] Sakuya - MidBoss 1",
-										"[Hard][Marisa] Sakuya Defeated",
-										"[Hard][Marisa] Sakuya - MidBoss 2",
-										"[Hard][Marisa] Remilia Defeated"],   []),
-		"Lunatic - Marisa - Early":   TRegionData(["[Lunatic][Marisa] Rumia - MidBoss",
-										"[Lunatic][Marisa] Rumia Defeated",
-										"[Lunatic][Marisa] Daiyousei Defeated",
-										"[Lunatic][Marisa] Cirno Defeated"],   ["Marisa - Mid"]),
-		"Lunatic - Marisa - Mid":     TRegionData(["[Lunatic][Marisa] Meiling - MidBoss",
-										"[Lunatic][Marisa] Meiling Defeated",
-										"[Lunatic][Marisa] Koakuma Defeated",
-										"[Lunatic][Marisa] Patchouli Defeated"],   ["Marisa - End"]),
-		"Lunatic - Marisa - End":     TRegionData(["[Lunatic][Marisa] Sakuya - MidBoss 1",
-										"[Lunatic][Marisa] Sakuya Defeated",
-										"[Lunatic][Marisa] Sakuya - MidBoss 2",
-										"[Lunatic][Marisa] Remilia Defeated"],   []),
-		"Marisa - Extra":   TRegionData(["[Marisa] Patchouli - MidBoss",
-										"[Marisa] Flandre Defeated",
-										"[Marisa] Stage Extra Clear"],   []),
-	}
-
-	regionsShotTypeWdifficutly: Dict[str, TRegionData] = {
-		"Menu":					TRegionData(None, ["Reimu - A", "Marisa - A", "Reimu - B", "Marisa - B"]),
-		"Reimu - A":            TRegionData(None, ["Reimu - A - Early", "Reimu - A - Mid", "Reimu - A - End",
-										  		"Easy - Reimu - A - Early", "Easy - Reimu - A - Mid", "Easy - Reimu - A - End",
-										  		"Normal - Reimu - A - Early", "Normal - Reimu - A - Mid", "Normal - Reimu - A - End",
-												"Hard - Reimu - A - Early", "Hard - Reimu - A - Mid", "Hard - Reimu - A - End",
-												"Lunatic - Reimu - A - Early", "Lunatic - Reimu - A - Mid", "Lunatic - Reimu - A - End",
-										  		"Reimu - A - Extra"]),
-		"Reimu - B":            TRegionData(None, ["Reimu - B - Early", "Reimu - B - Mid", "Reimu - B - End",
-										  		"Easy - Reimu - B - Early", "Easy - Reimu - B - Mid", "Easy - Reimu - B - End",
-										  		"Normal - Reimu - B - Early", "Normal - Reimu - B - Mid", "Normal - Reimu - B - End",
-												"Hard - Reimu - B - Early", "Hard - Reimu - B - Mid", "Hard - Reimu - B - End",
-												"Lunatic - Reimu - B - Early", "Lunatic - Reimu - B - Mid", "Lunatic - Reimu - B - End",
-										  		"Reimu - B - Extra"]),
-		"Marisa - A":           TRegionData(None, ["Marisa - A - Early", "Marisa - A - Mid", "Marisa - A - End",
-												"Easy - Marisa - A - Early", "Easy - Marisa - A - Mid", "Easy - Marisa - A - End",
-												"Normal - Marisa - A - Early", "Normal - Marisa - A - Mid", "Normal - Marisa - A - End",
-												"Hard - Marisa - A - Early", "Hard - Marisa - A - Mid", "Hard - Marisa - A - End",
-												"Lunatic - Marisa - A - Early", "Lunatic - Marisa - A - Mid", "Lunatic - Marisa - A - End",
-										  		"Marisa - A - Extra"]),
-		"Marisa - B":           TRegionData(None, ["Marisa - B - Early", "Marisa - B - Mid", "Marisa - B - End",
-												"Easy - Marisa - B - Early", "Easy - Marisa - B - Mid", "Easy - Marisa - B - End",
-												"Normal - Marisa - B - Early", "Normal - Marisa - B - Mid", "Normal - Marisa - B - End",
-												"Hard - Marisa - B - Early", "Hard - Marisa - B - Mid", "Hard - Marisa - B - End",
-												"Lunatic - Marisa - B - Early", "Lunatic - Marisa - B - Mid", "Lunatic - Marisa - B - End",
-										  		"Marisa - B - Extra"]),
-
-		"Reimu - A - Early":	TRegionData(["[Reimu A] Stage 1 Clear",
-										"[Reimu A] Stage 2 Clear"],   []),
-		"Reimu - A - Mid":		TRegionData(["[Reimu A] Stage 3 Clear",
-										"[Reimu A] Stage 4 Clear"],   []),
-		"Reimu - A - End":		TRegionData(["[Reimu A] Stage 5 Clear",
-										"[Reimu A] Stage 6 Clear"],   []),
-		"Easy - Reimu - A - Early":    TRegionData(["[Easy][Reimu A] Rumia - MidBoss",
-										"[Easy][Reimu A] Rumia Defeated",
-										"[Easy][Reimu A] Daiyousei Defeated",
-										"[Easy][Reimu A] Cirno Defeated"],   []),
-		"Easy - Reimu - A - Mid":      TRegionData(["[Easy][Reimu A] Meiling - MidBoss",
-										"[Easy][Reimu A] Meiling Defeated",
-										"[Easy][Reimu A] Koakuma Defeated",
-										"[Easy][Reimu A] Patchouli Defeated"],   []),
-		"Easy - Reimu - A - End":      TRegionData(["[Easy][Reimu A] Sakuya - MidBoss 1",
-										"[Easy][Reimu A] Sakuya Defeated"],   []),
-		"Normal - Reimu - A - Early":    TRegionData(["[Normal][Reimu A] Rumia - MidBoss",
-										"[Normal][Reimu A] Rumia Defeated",
-										"[Normal][Reimu A] Daiyousei Defeated",
-										"[Normal][Reimu A] Cirno Defeated"],   []),
-		"Normal - Reimu - A - Mid":      TRegionData(["[Normal][Reimu A] Meiling - MidBoss",
-										"[Normal][Reimu A] Meiling Defeated",
-										"[Normal][Reimu A] Koakuma Defeated",
-										"[Normal][Reimu A] Patchouli Defeated"],   []),
-		"Normal - Reimu - A - End":      TRegionData(["[Normal][Reimu A] Sakuya - MidBoss 1",
-										"[Normal][Reimu A] Sakuya Defeated",
-										"[Normal][Reimu A] Sakuya - MidBoss 2",
-										"[Normal][Reimu A] Remilia Defeated"],   []),
-		"Hard - Reimu - A - Early":    TRegionData(["[Hard][Reimu A] Rumia - MidBoss",
-										"[Hard][Reimu A] Rumia Defeated",
-										"[Hard][Reimu A] Daiyousei Defeated",
-										"[Hard][Reimu A] Cirno Defeated"],   []),
-		"Hard - Reimu - A - Mid":      TRegionData(["[Hard][Reimu A] Meiling - MidBoss",
-										"[Hard][Reimu A] Meiling Defeated",
-										"[Hard][Reimu A] Koakuma Defeated",
-										"[Hard][Reimu A] Patchouli Defeated"],   []),
-		"Hard - Reimu - A - End":      TRegionData(["[Hard][Reimu A] Sakuya - MidBoss 1",
-										"[Hard][Reimu A] Sakuya Defeated",
-										"[Hard][Reimu A] Sakuya - MidBoss 2",
-										"[Hard][Reimu A] Remilia Defeated"],   []),
-		"Lunatic - Reimu - A - Early":    TRegionData(["[Lunatic][Reimu A] Rumia - MidBoss",
-										"[Lunatic][Reimu A] Rumia Defeated",
-										"[Lunatic][Reimu A] Daiyousei Defeated",
-										"[Lunatic][Reimu A] Cirno Defeated"],   []),
-		"Lunatic - Reimu - A - Mid":      TRegionData(["[Lunatic][Reimu A] Meiling - MidBoss",
-										"[Lunatic][Reimu A] Meiling Defeated",
-										"[Lunatic][Reimu A] Koakuma Defeated",
-										"[Lunatic][Reimu A] Patchouli Defeated"],   []),
-		"Lunatic - Reimu - A - End":      TRegionData(["[Lunatic][Reimu A] Sakuya - MidBoss 1",
-										"[Lunatic][Reimu A] Sakuya Defeated",
-										"[Lunatic][Reimu A] Sakuya - MidBoss 2",
-										"[Lunatic][Reimu A] Remilia Defeated"],   []),
-		"Reimu - A - Extra":    TRegionData(["[Reimu A] Patchouli - MidBoss",
-										"[Reimu A] Flandre Defeated",
-										"[Reimu A] Stage Extra Clear"],   []),
-
-		"Reimu - B - Early":  TRegionData(["[Reimu B] Stage 1 Clear",
-										"[Reimu B] Stage 2 Clear"],   []),
-		"Reimu - B - Mid":    TRegionData(["[Reimu B] Stage 3 Clear",
-										"[Reimu B] Stage 4 Clear"],   []),
-		"Reimu - B - End":    TRegionData(["[Reimu B] Stage 5 Clear",
-										"[Reimu B] Stage 6 Clear"],   []),
-		"Easy - Reimu - B - Early":    TRegionData(["[Easy][Reimu B] Rumia - MidBoss",
-										"[Easy][Reimu B] Rumia Defeated",
-										"[Easy][Reimu B] Daiyousei Defeated",
-										"[Easy][Reimu B] Cirno Defeated"],   []),
-		"Easy - Reimu - B - Mid":      TRegionData(["[Easy][Reimu B] Meiling - MidBoss",
-										"[Easy][Reimu B] Meiling Defeated",
-										"[Easy][Reimu B] Koakuma Defeated",
-										"[Easy][Reimu B] Patchouli Defeated"],   []),
-		"Easy - Reimu - B - End":      TRegionData(["[Easy][Reimu B] Sakuya - MidBoss 1",
-										"[Easy][Reimu B] Sakuya Defeated"],   []),
-		"Normal - Reimu - B - Early":    TRegionData(["[Normal][Reimu B] Rumia - MidBoss",
-										"[Normal][Reimu B] Rumia Defeated",
-										"[Normal][Reimu B] Daiyousei Defeated",
-										"[Normal][Reimu B] Cirno Defeated"],   []),
-		"Normal - Reimu - B - Mid":      TRegionData(["[Normal][Reimu B] Meiling - MidBoss",
-										"[Normal][Reimu B] Meiling Defeated",
-										"[Normal][Reimu B] Koakuma Defeated",
-										"[Normal][Reimu B] Patchouli Defeated"],   []),
-		"Normal - Reimu - B - End":      TRegionData(["[Normal][Reimu B] Sakuya - MidBoss 1",
-										"[Normal][Reimu B] Sakuya Defeated",
-										"[Normal][Reimu B] Sakuya - MidBoss 2",
-										"[Normal][Reimu B] Remilia Defeated"],   []),
-		"Hard - Reimu - B - Early":    TRegionData(["[Hard][Reimu B] Rumia - MidBoss",
-										"[Hard][Reimu B] Rumia Defeated",
-										"[Hard][Reimu B] Daiyousei Defeated",
-										"[Hard][Reimu B] Cirno Defeated"],   []),
-		"Hard - Reimu - B - Mid":      TRegionData(["[Hard][Reimu B] Meiling - MidBoss",
-										"[Hard][Reimu B] Meiling Defeated",
-										"[Hard][Reimu B] Koakuma Defeated",
-										"[Hard][Reimu B] Patchouli Defeated"],   []),
-		"Hard - Reimu - B - End":      TRegionData(["[Hard][Reimu B] Sakuya - MidBoss 1",
-										"[Hard][Reimu B] Sakuya Defeated",
-										"[Hard][Reimu B] Sakuya - MidBoss 2",
-										"[Hard][Reimu B] Remilia Defeated"],   []),
-		"Lunatic - Reimu - B - Early":    TRegionData(["[Lunatic][Reimu B] Rumia - MidBoss",
-										"[Lunatic][Reimu B] Rumia Defeated",
-										"[Lunatic][Reimu B] Daiyousei Defeated",
-										"[Lunatic][Reimu B] Cirno Defeated"],   []),
-		"Lunatic - Reimu - B - Mid":      TRegionData(["[Lunatic][Reimu B] Meiling - MidBoss",
-										"[Lunatic][Reimu B] Meiling Defeated",
-										"[Lunatic][Reimu B] Koakuma Defeated",
-										"[Lunatic][Reimu B] Patchouli Defeated"],   []),
-		"Lunatic - Reimu - B - End":      TRegionData(["[Lunatic][Reimu B] Sakuya - MidBoss 1",
-										"[Lunatic][Reimu B] Sakuya Defeated",
-										"[Lunatic][Reimu B] Sakuya - MidBoss 2",
-										"[Lunatic][Reimu B] Remilia Defeated"],   []),
-		"Reimu - B - Extra":    TRegionData(["[Reimu B] Patchouli - MidBoss",
-										"[Reimu B] Flandre Defeated",
-										"[Reimu B] Stage Extra Clear"],   []),
-
-		"Marisa - A - Early":  TRegionData(["[Marisa A] Stage 1 Clear",
-										"[Marisa A] Stage 2 Clear"],   []),
-		"Marisa - A - Mid":    TRegionData(["[Marisa A] Stage 3 Clear",
-										"[Marisa A] Stage 4 Clear"],   []),
-		"Marisa - A - End":    TRegionData(["[Marisa A] Stage 5 Clear",
-										"[Marisa A] Stage 6 Clear"],   []),
-		"Easy - Marisa - A - Early":    TRegionData(["[Easy][Marisa A] Rumia - MidBoss",
-										"[Easy][Marisa A] Rumia Defeated",
-										"[Easy][Marisa A] Daiyousei Defeated",
-										"[Easy][Marisa A] Cirno Defeated"],   []),
-		"Easy - Marisa - A - Mid":      TRegionData(["[Easy][Marisa A] Meiling - MidBoss",
-										"[Easy][Marisa A] Meiling Defeated",
-										"[Easy][Marisa A] Koakuma Defeated",
-										"[Easy][Marisa A] Patchouli Defeated"],   []),
-		"Easy - Marisa - A - End":      TRegionData(["[Easy][Marisa A] Sakuya - MidBoss 1",
-										"[Easy][Marisa A] Sakuya Defeated"],   []),
-		"Normal - Marisa - A - Early":    TRegionData(["[Normal][Marisa A] Rumia - MidBoss",
-										"[Normal][Marisa A] Rumia Defeated",
-										"[Normal][Marisa A] Daiyousei Defeated",
-										"[Normal][Marisa A] Cirno Defeated"],   []),
-		"Normal - Marisa - A - Mid":      TRegionData(["[Normal][Marisa A] Meiling - MidBoss",
-										"[Normal][Marisa A] Meiling Defeated",
-										"[Normal][Marisa A] Koakuma Defeated",
-										"[Normal][Marisa A] Patchouli Defeated"],   []),
-		"Normal - Marisa - A - End":      TRegionData(["[Normal][Marisa A] Sakuya - MidBoss 1",
-										"[Normal][Marisa A] Sakuya Defeated",
-										"[Normal][Marisa A] Sakuya - MidBoss 2",
-										"[Normal][Marisa A] Remilia Defeated"],   []),
-		"Hard - Marisa - A - Early":    TRegionData(["[Hard][Marisa A] Rumia - MidBoss",
-										"[Hard][Marisa A] Rumia Defeated",
-										"[Hard][Marisa A] Daiyousei Defeated",
-										"[Hard][Marisa A] Cirno Defeated"],   []),
-		"Hard - Marisa - A - Mid":      TRegionData(["[Hard][Marisa A] Meiling - MidBoss",
-										"[Hard][Marisa A] Meiling Defeated",
-										"[Hard][Marisa A] Koakuma Defeated",
-										"[Hard][Marisa A] Patchouli Defeated"],   []),
-		"Hard - Marisa - A - End":      TRegionData(["[Hard][Marisa A] Sakuya - MidBoss 1",
-										"[Hard][Marisa A] Sakuya Defeated",
-										"[Hard][Marisa A] Sakuya - MidBoss 2",
-										"[Hard][Marisa A] Remilia Defeated"],   []),
-		"Lunatic - Marisa - A - Early":    TRegionData(["[Lunatic][Marisa A] Rumia - MidBoss",
-										"[Lunatic][Marisa A] Rumia Defeated",
-										"[Lunatic][Marisa A] Daiyousei Defeated",
-										"[Lunatic][Marisa A] Cirno Defeated"],   []),
-		"Lunatic - Marisa - A - Mid":      TRegionData(["[Lunatic][Marisa A] Meiling - MidBoss",
-										"[Lunatic][Marisa A] Meiling Defeated",
-										"[Lunatic][Marisa A] Koakuma Defeated",
-										"[Lunatic][Marisa A] Patchouli Defeated"],   []),
-		"Lunatic - Marisa - A - End":      TRegionData(["[Lunatic][Marisa A] Sakuya - MidBoss 1",
-										"[Lunatic][Marisa A] Sakuya Defeated",
-										"[Lunatic][Marisa A] Sakuya - MidBoss 2",
-										"[Lunatic][Marisa A] Remilia Defeated"],   []),
-		"Marisa - A - Extra":    TRegionData(["[Marisa A] Patchouli - MidBoss",
-										"[Marisa A] Flandre Defeated",
-										"[Marisa A] Stage Extra Clear"],   []),
-
-		"Marisa - B - Early":  TRegionData(["[Marisa B] Stage 1 Clear",
-										"[Marisa B] Stage 2 Clear"],   []),
-		"Marisa - B - Mid":    TRegionData(["[Marisa B] Stage 3 Clear",
-										"[Marisa B] Stage 4 Clear"],   []),
-		"Marisa - B - End":    TRegionData(["[Marisa B] Stage 5 Clear",
-										"[Marisa B] Stage 6 Clear"],   []),
-		"Easy - Marisa - B - Early":    TRegionData(["[Easy][Marisa B] Rumia - MidBoss",
-										"[Easy][Marisa B] Rumia Defeated",
-										"[Easy][Marisa B] Daiyousei Defeated",
-										"[Easy][Marisa B] Cirno Defeated"],   []),
-		"Easy - Marisa - B - Mid":      TRegionData(["[Easy][Marisa B] Meiling - MidBoss",
-										"[Easy][Marisa B] Meiling Defeated",
-										"[Easy][Marisa B] Koakuma Defeated",
-										"[Easy][Marisa B] Patchouli Defeated"],   []),
-		"Easy - Marisa - B - End":      TRegionData(["[Easy][Marisa B] Sakuya - MidBoss 1",
-										"[Easy][Marisa B] Sakuya Defeated"],   []),
-		"Normal - Marisa - B - Early":    TRegionData(["[Normal][Marisa B] Rumia - MidBoss",
-										"[Normal][Marisa B] Rumia Defeated",
-										"[Normal][Marisa B] Daiyousei Defeated",
-										"[Normal][Marisa B] Cirno Defeated"],   []),
-		"Normal - Marisa - B - Mid":      TRegionData(["[Normal][Marisa B] Meiling - MidBoss",
-										"[Normal][Marisa B] Meiling Defeated",
-										"[Normal][Marisa B] Koakuma Defeated",
-										"[Normal][Marisa B] Patchouli Defeated"],   []),
-		"Normal - Marisa - B - End":      TRegionData(["[Normal][Marisa B] Sakuya - MidBoss 1",
-										"[Normal][Marisa B] Sakuya Defeated",
-										"[Normal][Marisa B] Sakuya - MidBoss 2",
-										"[Normal][Marisa B] Remilia Defeated"],   []),
-		"Hard - Marisa - B - Early":    TRegionData(["[Hard][Marisa B] Rumia - MidBoss",
-										"[Hard][Marisa B] Rumia Defeated",
-										"[Hard][Marisa B] Daiyousei Defeated",
-										"[Hard][Marisa B] Cirno Defeated"],   []),
-		"Hard - Marisa - B - Mid":      TRegionData(["[Hard][Marisa B] Meiling - MidBoss",
-										"[Hard][Marisa B] Meiling Defeated",
-										"[Hard][Marisa B] Koakuma Defeated",
-										"[Hard][Marisa B] Patchouli Defeated"],   []),
-		"Hard - Marisa - B - End":      TRegionData(["[Hard][Marisa B] Sakuya - MidBoss 1",
-										"[Hard][Marisa B] Sakuya Defeated",
-										"[Hard][Marisa B] Sakuya - MidBoss 2",
-										"[Hard][Marisa B] Remilia Defeated"],   []),
-		"Lunatic - Marisa - B - Early":    TRegionData(["[Lunatic][Marisa B] Rumia - MidBoss",
-										"[Lunatic][Marisa B] Rumia Defeated",
-										"[Lunatic][Marisa B] Daiyousei Defeated",
-										"[Lunatic][Marisa B] Cirno Defeated"],   []),
-		"Lunatic - Marisa - B - Mid":      TRegionData(["[Lunatic][Marisa B] Meiling - MidBoss",
-										"[Lunatic][Marisa B] Meiling Defeated",
-										"[Lunatic][Marisa B] Koakuma Defeated",
-										"[Lunatic][Marisa B] Patchouli Defeated"],   []),
-		"Lunatic - Marisa - B - End":      TRegionData(["[Lunatic][Marisa B] Sakuya - MidBoss 1",
-										"[Lunatic][Marisa B] Sakuya Defeated",
-										"[Lunatic][Marisa B] Sakuya - MidBoss 2",
-										"[Lunatic][Marisa B] Remilia Defeated"],   []),
-		"Marisa - B - Extra":    TRegionData(["[Marisa B] Patchouli - MidBoss",
-										"[Marisa B] Flandre Defeated",
-										"[Marisa B] Stage Extra Clear"],   []),
-	}
-
-	extra = getattr(options, "extra_stage")
 	shot_type = getattr(options, "shot_type")
 	difficulty_check = getattr(options, "difficulty_check")
+	extra = getattr(options, "extra_stage")
 
-	if difficulty_check:
-		regions = regionsShotTypeWdifficutly if shot_type else regionsNoShotTypeWdifficutly
-	else:
-		regions = regionsShotType if shot_type else regionsNoShotType
+	regions = get_regions(shot_type, difficulty_check, extra)
 
 	# Set up the regions correctly.
 	for name, data in regions.items():
-		if extra == 0 and "Extra" in name:
-			continue
+		multiworld.regions.append(create_region(multiworld, player, name, data["locations"]))
 
-		multiworld.regions.append(create_region(multiworld, player, name, data))
-
-def create_region(multiworld: MultiWorld, player: int, name: str, data: TRegionData):
+def create_region(multiworld: MultiWorld, player: int, name: str, locations: list):
 	region = Region(name, player, multiworld)
-	if data.locations:
-		for loc_name in data.locations:
-			loc_data = location_table.get(loc_name)
-			location = TLocation(player, loc_name, loc_data.code if loc_data else None, region)
+	if locations:
+		for location in locations:
+			location = TLocation(player, location, location_table[location], region)
 			region.locations.append(location)
 
 	return region
-
-def connect_regions(world: MultiWorld, player: int, source: str, target: str, rule=None):
-	sourceRegion = world.get_region(source, player)
-	targetRegion = world.get_region(target, player)
-	sourceRegion.connect(targetRegion, rule=rule)
