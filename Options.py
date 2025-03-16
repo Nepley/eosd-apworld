@@ -18,9 +18,9 @@ class Mode(Choice):
 	option_normal_static = 2
 	default = 0
 
-class PracticeStageUnlock(Choice):
+class StageUnlock(Choice):
 	"""
-	How the stage unlock are grouped in Practice mode
+	How the stage unlock are grouped in Practice mode and for the Extra Stage if it's apart
     Global: No group
     By Character: Stage group by character
     By Shot Type: Stage group by shot type
@@ -238,7 +238,7 @@ class PowerPointDrainTrap(Range):
 
 game_options: Dict[str, type(Option)] = {
 	"mode": Mode,
-	"practice_stage_unlock": PracticeStageUnlock,
+	"stage_unlock": StageUnlock,
 	"number_life_mid": NumberLifeMid,
 	"number_bomb_mid": NumberBombsMid,
 	"difficulty_mid": DifficultyMid,

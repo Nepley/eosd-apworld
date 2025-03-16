@@ -36,11 +36,11 @@ class TWorld(World):
 		item_pool: List[TItem] = []
 		character_list = []
 		stages = []
-		extra_stage = []
+		extra_stages = []
 		total_locations = len(self.multiworld.get_unfilled_locations(self.player))
 		number_placed_item = 0
 		mode = getattr(self.options, "mode")
-		practice_stage_unlock = getattr(self.options, "practice_stage_unlock")
+		stage_unlock = getattr(self.options, "stage_unlock")
 		extra = getattr(self.options, "extra_stage")
 		goal = getattr(self.options, "goal")
 		shot_type = getattr(self.options, "shot_type")
@@ -86,13 +86,13 @@ class TWorld(World):
 				continue
 
 			# If we are in practice mode and the stage progression is not progressive, we might have to change the quantity
-			if data.category == "Power Point" and mode == PRACTICE_MODE and practice_stage_unlock != STAGE_GLOBAL:
+			if data.category == "Power Point" and mode == PRACTICE_MODE and stage_unlock != STAGE_GLOBAL:
 				# If we have no addition check, we remove 3 Power Point item
 				quantity = quantity-3 if not shot_type and not difficulty_check and extra == NO_EXTRA else quantity
 
 			# Will be added later
-			if data.category in ["[Global] Extra Stages", "[Character] Extra Stages", "[Shot Type] Extra Stages"]:
-				extra_stage.append({"name": name, "data": data})
+			if data.category in ["[Global] Extra Stage", "[Character] Extra Stage", "[Shot Type] Extra Stage"]:
+				extra_stages.append({"name": name, "data": data})
 				continue
 
 			item_pool += [self.create_item(name) for _ in range(0, quantity)]
@@ -100,8 +100,8 @@ class TWorld(World):
 		# Stages
 		if mode == PRACTICE_MODE:
 			# If we have stage by shot type but we don't any option adding location, we change it to stage by character
-			if practice_stage_unlock == STAGE_BY_SHOT_TYPE and not shot_type and not difficulty_check:
-				practice_stage_unlock = STAGE_BY_CHARACTER
+			if stage_unlock == STAGE_BY_SHOT_TYPE and not shot_type and not difficulty_check:
+				stage_unlock = STAGE_BY_CHARACTER
 
 			for stage in stages:
 				quantity = stage['data'].max_quantity
@@ -109,31 +109,31 @@ class TWorld(World):
 				if extra != EXTRA_LINEAR:
 					quantity -= 1
 
-				if practice_stage_unlock == STAGE_GLOBAL and stage['data'].category == "[Global] Stages":
+				if stage_unlock == STAGE_GLOBAL and stage['data'].category == "[Global] Stages":
 					item_pool += [self.create_item(stage['name']) for _ in range(0, quantity)]
 
-				if practice_stage_unlock == STAGE_BY_CHARACTER and stage['data'].category == "[Character] Stages":
+				if stage_unlock == STAGE_BY_CHARACTER and stage['data'].category == "[Character] Stages":
 					item_pool += [self.create_item(stage['name']) for _ in range(0, quantity)]
 
-				if practice_stage_unlock == STAGE_BY_SHOT_TYPE and stage['data'].category == "[Shot Type] Stages":
+				if stage_unlock == STAGE_BY_SHOT_TYPE and stage['data'].category == "[Shot Type] Stages":
 					item_pool += [self.create_item(stage['name']) for _ in range(0, quantity)]
 
 		# Extra
 		if extra == EXTRA_APART:
 			# If we have stage by shot type but we don't any option adding location, we change it to stage by character
-			if practice_stage_unlock == STAGE_BY_SHOT_TYPE and not shot_type and not difficulty_check:
-				practice_stage_unlock = STAGE_BY_CHARACTER
+			if stage_unlock == STAGE_BY_SHOT_TYPE and not shot_type and not difficulty_check:
+				stage_unlock = STAGE_BY_CHARACTER
 
-			for stage in stages:
+			for stage in extra_stages:
 				quantity = stage['data'].max_quantity
 
-				if practice_stage_unlock == STAGE_GLOBAL and stage['data'].category == "[Global] Extra Stages":
+				if stage_unlock == STAGE_GLOBAL and stage['data'].category == "[Global] Extra Stage":
 					item_pool += [self.create_item(stage['name']) for _ in range(0, quantity)]
 
-				if practice_stage_unlock == STAGE_BY_CHARACTER and stage['data'].category == "[Character] Extra Stages":
+				if stage_unlock == STAGE_BY_CHARACTER and stage['data'].category == "[Character] Extra Stage":
 					item_pool += [self.create_item(stage['name']) for _ in range(0, quantity)]
 
-				if practice_stage_unlock == STAGE_BY_SHOT_TYPE and stage['data'].category == "[Shot Type] Extra Stages":
+				if stage_unlock == STAGE_BY_SHOT_TYPE and stage['data'].category == "[Shot Type] Extra Stage":
 					item_pool += [self.create_item(stage['name']) for _ in range(0, quantity)]
 
 		# Selecting starting character

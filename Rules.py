@@ -96,7 +96,7 @@ def connect_regions(multiworld: MultiWorld, player: int, source: str, exits: lis
 	extra = getattr(multiworld.worlds[player].options, "extra_stage")
 	difficulty_check = getattr(multiworld.worlds[player].options, "difficulty_check")
 	shot_type = getattr(multiworld.worlds[player].options, "shot_type")
-	practice_stage_unlock = getattr(multiworld.worlds[player].options, "practice_stage_unlock")
+	stage_unlock = getattr(multiworld.worlds[player].options, "stage_unlock")
 
 	for exit in exits:
 		rule = None
@@ -121,8 +121,8 @@ def connect_regions(multiworld: MultiWorld, player: int, source: str, exits: lis
 
 				# If we don't have global stage unlock, we retrieve the character from the source region
 				character_value = []
-				if practice_stage_unlock != STAGE_GLOBAL:
-					if practice_stage_unlock == STAGE_BY_CHARACTER:
+				if stage_unlock != STAGE_GLOBAL:
+					if stage_unlock == STAGE_BY_CHARACTER:
 						for character in CHARACTERS_LIST:
 							if character in source:
 								character_value = CHARACTER_SHOT_LINK[character] + [character]
@@ -139,13 +139,12 @@ def connect_regions(multiworld: MultiWorld, player: int, source: str, exits: lis
 									character_value = CHARACTER_SHOT_LINK[character] + [character]
 									break
 
-				print(f"Normal Rule for the following: {character_value} ({level}, {mode}, {difficulty_value})")
 				rule = makeStageRule(player, level, mode, difficulty_value, character_value)
 			else:
 				# If we don't have global stage unlock, we retrieve the character from the source region
 				character_value = []
-				if practice_stage_unlock != STAGE_GLOBAL:
-					if practice_stage_unlock == STAGE_BY_CHARACTER:
+				if stage_unlock != STAGE_GLOBAL:
+					if stage_unlock == STAGE_BY_CHARACTER:
 						for character in CHARACTERS_LIST:
 							if character in source:
 								character_value = CHARACTER_SHOT_LINK[character] + [character]
@@ -162,7 +161,6 @@ def connect_regions(multiworld: MultiWorld, player: int, source: str, exits: lis
 									character_value = CHARACTER_SHOT_LINK[character] + [character]
 									break
 
-				print(f"Extra Rule for the following: {character_value} ({mode}, {extra})")
 				rule = makeExtraRule(player, character_value, mode, extra)
 		elif exit in ALL_CHARACTERS_LIST:
 			rule = makeCharacterRule(player, CHARACTER_TO_ITEM[exit])
