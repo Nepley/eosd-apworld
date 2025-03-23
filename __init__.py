@@ -8,7 +8,6 @@ from .Locations import location_table
 from .Options import game_options
 from .Regions import create_regions
 from .Rules import set_rules
-import random
 
 def launch_client():
 	"""Launch a client instance"""
@@ -137,7 +136,7 @@ class TWorld(World):
 					item_pool += [self.create_item(stage['name']) for _ in range(0, quantity)]
 
 		# Selecting starting character
-		chosen = random.choice(character_list)
+		chosen = self.random.choice(character_list)
 		self.multiworld.push_precollected(self.create_item(chosen))
 		character_list.remove(chosen)
 		for character in character_list:
@@ -182,7 +181,7 @@ class TWorld(World):
 			number_traps = int(remaining_locations * traps / 100)
 
 			if number_traps > 0:
-				trapList = random.choices(["Max Rank", "-50% Power Point", "-1 Bomb", "-1 Life", "No Focus", "Reverse Movement", "Aya Speed", "Freeze", "Power Point Drain"], weights=[max_rank_trap, power_point_trap, bomb_trap, life_trap, no_focus_trap, reverse_movement_trap, aya_speed_trap, freeze_trap, power_point_drain_trap], k=number_traps)
+				trapList = self.random.choices(["Max Rank", "-50% Power Point", "-1 Bomb", "-1 Life", "No Focus", "Reverse Movement", "Aya Speed", "Freeze", "Power Point Drain"], weights=[max_rank_trap, power_point_trap, bomb_trap, life_trap, no_focus_trap, reverse_movement_trap, aya_speed_trap, freeze_trap, power_point_drain_trap], k=number_traps)
 				for trap in trapList:
 					item_pool.append(self.create_item(trap))
 
@@ -195,7 +194,7 @@ class TWorld(World):
 	def get_filler_item_name(self) -> str:
 		fillers = get_items_by_category("Filler")
 		weights = [data.weight for data in fillers.values()]
-		return self.multiworld.random.choices([filler for filler in fillers.keys()], weights, k=1)[0]
+		return self.random.choices([filler for filler in fillers.keys()], weights, k=1)[0]
 
 	def create_item(self, name: str) -> TItem:
 		data = item_table[name]
