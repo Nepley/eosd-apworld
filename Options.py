@@ -139,6 +139,12 @@ class EndingRequired(Choice):
 	option_all_shot_types = 2
 	default = 0
 
+class RingLink(Toggle):
+	"""
+	Whether your in-level Power Point gain/loss is linked to other players
+	"""
+	display_name = "Ring Link"
+
 class Traps(Range):
 	"""Percentage of fillers that are traps"""
 	display_name = "Percentage of fillers that are traps"
@@ -253,6 +259,7 @@ game_options: Dict[str, type(Option)] = {
 	"goal": Goal,
 	"ending_required": EndingRequired,
 	"death_link": DeathLink,
+	"ring_link": RingLink,
 	"traps": Traps,
 	"max_rank_trap": MaxRankTrap,
 	"power_point_trap": PowerPointTrap,

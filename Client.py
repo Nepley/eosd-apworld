@@ -1,6 +1,8 @@
 from typing import Optional
 import asyncio
 import colorama
+import time
+import random
 from .gameHandler import *
 from .Tools import *
 from .Mapping import *
@@ -21,6 +23,10 @@ class TouhouContext(CommonContext):
 		self.items_handling = 0b111  # Item from starting inventory, own world and other world
 		self.pending_death_link = False
 
+		self.current_power_point = -1
+		self.ring_link_id = None
+		self.last_power_point = -1
+
 		self.handler = None # gameHandler
 		self.inError = False
 		self.msgQueue = []
@@ -36,6 +42,8 @@ class TouhouContext(CommonContext):
 		self.final_stage_location_ids = None
 
 		self.is_connected = False
+		self.last_death_link = 0
+		self.last_ring_link = 0
 
 		# Counter
 		self.difficulties = 3
@@ -46,6 +54,11 @@ class TouhouContext(CommonContext):
 		self.otherDifficulties = False
 		self.ExtraMenu = False
 		self.minimalCursor = 0
+
+	def make_gui(self):
+		ui = super().make_gui()
+		ui.base_title = f"{DISPLAY_NAME} Client"
+		return ui
 
 	async def server_auth(self, password_requested: bool = False):
 		if password_requested and not self.password:
@@ -89,7 +102,11 @@ class TouhouContext(CommonContext):
 			tags = args.get("tags", [])
 			# we can skip checking "DeathLink" in ctx.tags, as otherwise we wouldn't have been send this
 			if "DeathLink" in tags and self.last_death_link != args["data"]["time"]:
+				self.last_death_link = args["data"]["time"]
 				self.on_deathlink(args["data"])
+			elif "RingLink" in tags and self.ring_link_id != None:
+				self.last_ring_link = args["data"]["time"]
+				self.on_ringlink(args["data"])
 
 	def client_recieved_initial_server_data(self):
 		"""
@@ -323,6 +340,18 @@ class TouhouContext(CommonContext):
 		"""
 		self.pending_death_link = True
 		return super().on_deathlink(data)
+	
+	def on_ringlink(self, data):
+		"""
+		Method that is called when a ring link is recieved.
+		"""
+		# We check if we are in a state where we can receive a ring link
+		if self.handler.gameController and self.handler.getGameMode() == IN_GAME and not self.inError:
+			# We check if it was not sent by us
+			if data["source"] != self.ring_link_id:
+				self.handler.playSound(0x15) if data["amount"] < 5 else self.handler.playSound(0x1F)
+				self.handler.giveCurrentPowerPoint(data["amount"])
+				self.last_power_point = self.handler.getCurrentPowerPoint()
 
 	async def send_death_link(self):
 		"""
@@ -349,6 +378,10 @@ class TouhouContext(CommonContext):
 
 		self.handler.updateStageList(mode == PRACTICE_MODE)
 		self.handler.updatePracticeScore(shot_type, difficulty_check)
+
+	def addRingLinkTag(self):
+		self.tags.add("RingLink")
+		asyncio.create_task(self.send_msgs([{"cmd": "ConnectUpdate", "tags": self.tags}]))
 
 	def checkVictory(self):
 		"""
@@ -694,6 +727,40 @@ class TouhouContext(CommonContext):
 			print(f"ERROR: {e}")
 			self.inError = True
 
+	async def ring_link_loop(self):
+		"""
+		Loop that handles Ring Link
+		"""
+		try:
+			self.last_power_point = -1
+			self.ring_link_id = random.randint(0, 999999)
+			self.timer = 0.5
+
+			while not self.exit_event.is_set() and self.handler.gameController and not self.inError:
+				await asyncio.sleep(self.timer)
+				if self.handler.getGameMode() == IN_GAME:
+					# We wait a little before sending ring link
+					self.timer = 0.1
+					curent_power = self.handler.getCurrentPowerPoint()
+
+					# If last_power_point is -1, that mean it's the first loop, so we just wait a little and then set it
+					if self.last_power_point == -1:
+						await asyncio.sleep(1)
+						self.last_power_point = curent_power
+						continue
+
+					# If the power point has changed, we send a ring link
+					if self.last_power_point != curent_power:
+						diff_power = curent_power-self.last_power_point
+						self.last_power_point = curent_power
+						asyncio.create_task(self.send_msgs([{"cmd": "Bounce", "tags": ["RingLink"], "data": {"amount": diff_power, "source": self.ring_link_id, "time": time.time()}}]))
+				else:
+					self.last_power_point = -1
+					self.timer = 0.5
+		except Exception as e:
+			print(f"ERROR: {e}")
+			self.inError = True
+
 	async def connect_to_game(self):
 		"""
 		Connect the client to the game process
@@ -767,6 +834,10 @@ async def game_watcher(ctx: TouhouContext):
 			if ctx.options['death_link']:
 				await ctx.update_death_link(True)
 				asyncio.create_task(ctx.death_link_loop())
+
+			if ctx.options['ring_link']:
+				ctx.addRingLinkTag()
+				asyncio.create_task(ctx.ring_link_loop())
 
 			# Infinite loop while there is no error. If there is an error, we exit this loop in order to restart the connection
 			while not ctx.exit_event.is_set() and not ctx.inError:

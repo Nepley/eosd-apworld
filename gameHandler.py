@@ -297,6 +297,9 @@ class gameHandler:
 	def isBossPresent(self):
 		return self.gameController.getIsBossPresent() == 1
 
+	def getCurrentPowerPoint(self):
+		return self.gameController.getPower()
+
 	#
 	# Set Items Functions
 	#
@@ -510,8 +513,21 @@ class gameHandler:
 
 	async def killPlayer(self):
 		self.gameController.setKill(True)
-		asyncio.sleep(0.1)
+		await asyncio.sleep(0.1)
 		self.gameController.setKill(False)
+
+	def giveCurrentPowerPoint(self, power):
+		"""
+		Give power point to the current stage
+		"""
+		if self.gameController.getGameMode() == IN_GAME:
+			new_power = self.gameController.getPower() + power
+			if(new_power > 128):
+				new_power = 128
+			elif(new_power < 0):
+				new_power = 0
+
+			self.gameController.setPower(new_power)
 
 	def resetStageVariables(self):
 		"""
