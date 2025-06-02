@@ -509,6 +509,12 @@ class TouhouContext(CommonContext):
 		"""
 		try:
 			mode = self.options['mode']
+			exclude_lunatic = self.options['exclude_lunatic']
+
+			if exclude_lunatic and self.difficulties == LUNATIC:
+				self.difficulties = HARD
+				self.handler.unlockDifficulty(self.difficulties)
+
 			while not self.exit_event.is_set() and self.handler.gameController and not self.inError:
 				if self.handler.getGameMode() == IN_MENU:
 					menu = self.handler.getMenu()

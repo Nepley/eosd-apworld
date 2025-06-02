@@ -97,6 +97,7 @@ def connect_regions(multiworld: MultiWorld, player: int, source: str, exits: lis
 	difficulty_check = getattr(multiworld.worlds[player].options, "difficulty_check")
 	shot_type = getattr(multiworld.worlds[player].options, "shot_type")
 	stage_unlock = getattr(multiworld.worlds[player].options, "stage_unlock")
+	exclude_lunatic = getattr(multiworld.worlds[player].options, "exclude_lunatic")
 
 	for exit in exits:
 		rule = None
@@ -118,6 +119,9 @@ def connect_regions(multiworld: MultiWorld, player: int, source: str, exits: lis
 						if difficulty in exit:
 							difficulty_value = lower_difficulty
 							break
+
+					if exclude_lunatic:
+						difficulty_value -= 1
 
 				# If we don't have global stage unlock, we retrieve the character from the source region
 				character_value = []
@@ -175,9 +179,10 @@ def set_rules(multiworld: MultiWorld, player: int):
 	extra = getattr(multiworld.worlds[player].options, "extra_stage")
 	endingRequired = getattr(multiworld.worlds[player].options, "ending_required")
 	goal = getattr(multiworld.worlds[player].options, "goal")
+	exclude_lunatic = getattr(multiworld.worlds[player].options, "exclude_lunatic")
 
 	# Regions
-	regions = get_regions(shot_type, difficulty_check, extra)
+	regions = get_regions(shot_type, difficulty_check, extra, exclude_lunatic)
 
 	for name, data in regions.items():
 		if data["exits"]:

@@ -40,6 +40,7 @@ class TWorld(World):
 		number_placed_item = 0
 		mode = getattr(self.options, "mode")
 		stage_unlock = getattr(self.options, "stage_unlock")
+		exclude_lunatic = getattr(self.options, "exclude_lunatic")
 		extra = getattr(self.options, "extra_stage")
 		goal = getattr(self.options, "goal")
 		shot_type = getattr(self.options, "shot_type")
@@ -93,6 +94,10 @@ class TWorld(World):
 			if data.category in ["[Global] Extra Stage", "[Character] Extra Stage", "[Shot Type] Extra Stage"]:
 				extra_stages.append({"name": name, "data": data})
 				continue
+
+			# If Lunatic is excluded, we remove one Lower difficulty
+			if data.category == "Items" and name == "Lower Difficulty" and exclude_lunatic:
+				quantity -= 1
 
 			item_pool += [self.create_item(name) for _ in range(0, quantity)]
 
