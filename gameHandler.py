@@ -64,71 +64,60 @@ class gameHandler:
 						stage = self.stages[characters][shots]
 					self.gameController.setCharacterDifficulty(characters, shots, difficulty, stage)
 
-	def updatePracticeScore(self, by_shot_type = False, by_difficulty = False,  easyStage6 = False):
-		if by_difficulty:
-			if by_shot_type:
+	def updatePracticeScore(self, locations, checked_location):
+		scores = {}
+		for character in CHARACTERS:
+			scores[character] = {}
+			for shot in SHOTS:
+				scores[character][shot] = {}
 				for difficulty in range(4):
-					for character in CHARACTERS:
+					scores[character][shot][difficulty] = {}
+					for stage in range(6):
+						scores[character][shot][difficulty][stage] = [0, 0]
+
+		# We check each locations to see which one has been done
+		for id, location_data in locations.items():
+			if id in checked_location:
+				character = location_data[0]
+				stage = location_data[1]
+				counter = location_data[2]
+				shot_type = location_data[3]
+				difficulty = location_data[4]
+
+				if difficulty >= 0:
+					if shot_type in SHOTS:
+						scores[character][shot_type][difficulty][stage][counter] += 1
+					else:
 						for shot in SHOTS:
-							for stage in range(6):
-								score = 0
-								if self.isBossBeaten(character, stage, 1, shot, difficulty):
-									score += 444444444
-								if self.isBossBeaten(character, stage, 0, shot, difficulty):
-									score += 555555555
+							scores[character][shot][difficulty][stage][counter] += 1
+				else:
+					if shot_type in SHOTS:
+						scores[character][shot_type][EASY][stage][counter] += 1
+						scores[character][shot_type][NORMAL][stage][counter] += 1
+						scores[character][shot_type][HARD][stage][counter] += 1
+						scores[character][shot_type][LUNATIC][stage][counter] += 1
+					else:
+						for shot in SHOTS:
+							scores[character][shot][EASY][stage][counter] += 1
+							scores[character][shot][NORMAL][stage][counter] += 1
+							scores[character][shot][HARD][stage][counter] += 1
+							scores[character][shot][LUNATIC][stage][counter] += 1
 
-								# Easy mode has no stage 6
-								if stage < 5 or difficulty != 0 or easyStage6:
-									self.gameController.setPracticeStageScore(character, shot, difficulty, stage, score)
-			else:
+		# We set the scores depending on the counter
+		for character in CHARACTERS:
+			for shot in SHOTS:
 				for difficulty in range(4):
-					for character in CHARACTERS:
-						for stage in range(6):
-							score = 0
-							if self.isBossBeaten(character, stage, 1, -1, difficulty):
-								score += 444444444
-							if self.isBossBeaten(character, stage, 0, -1, difficulty):
-								score += 555555555
-
-							# Easy mode has no stage 6
-							if stage < 5 or difficulty != 0 or easyStage6:
-								for shot in SHOTS:
-									self.gameController.setPracticeStageScore(character, shot, difficulty, stage, score)
-		else:
-			if by_shot_type:
-				for character in CHARACTERS:
-					for shot in SHOTS:
-						for stage in range(6):
-							score = 0
-							if self.isBossBeaten(character, stage, 1, shot):
-								score += 444444444
-							if self.isBossBeaten(character, stage, 0, shot):
-								score += 555555555
-
-							# Easy mode has no stage 6
-							if stage < 5 or easyStage6:
-								self.gameController.setPracticeStageScore(character, shot, EASY, stage, score)
-
-							self.gameController.setPracticeStageScore(character, shot, NORMAL, stage, score)
-							self.gameController.setPracticeStageScore(character, shot, HARD, stage, score)
-							self.gameController.setPracticeStageScore(character, shot, LUNATIC, stage, score)
-			else:
-				for character in CHARACTERS:
 					for stage in range(6):
 						score = 0
-						if self.isBossBeaten(character, stage, 1):
-							score += 444444444
-						if self.isBossBeaten(character, stage, 0):
+						if scores[character][shot][difficulty][stage][0] > 0:
 							score += 555555555
+						if scores[character][shot][difficulty][stage][1] > 0:
+							score += 222222222
+						if scores[character][shot][difficulty][stage][1] > 1:
+							score += 222222222
 
-						for shot in SHOTS:
-							# Easy mode has no stage 6
-							if stage < 5 or easyStage6:
-								self.gameController.setPracticeStageScore(character, shot, EASY, stage, score)
-
-							self.gameController.setPracticeStageScore(character, shot, NORMAL, stage, score)
-							self.gameController.setPracticeStageScore(character, shot, HARD, stage, score)
-							self.gameController.setPracticeStageScore(character, shot, LUNATIC, stage, score)
+						if difficulty != EASY or stage < 5:
+							self.gameController.setPracticeStageScore(character, shot, difficulty, stage, score)
 
 	def updateExtraUnlock(self, otherMode = False):
 		"""

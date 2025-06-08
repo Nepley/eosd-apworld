@@ -322,12 +322,6 @@ class TouhouContext(CommonContext):
 				# If we are in normal mode, the extra stage is set to linear and the stage 6 has just been cleared. We unlock it if it's not already.
 				if not self.handler.canExtra() and self.options['mode'] in NORMAL_MODE and self.options['extra_stage'] == EXTRA_LINEAR and id in self.final_stage_location_ids:
 					self.handler.unlockExtraStage()
-			# If the location is not checked but it was marked as checked, we set it as beaten (For exemple, when the client is reconnected)
-			elif id in self.previous_location_checked and not self.handler.isBossBeaten(*map):
-				# If the difficulty of the location is at -1 but we have difficulty check, we do not set this locations to not cause any problem
-				# Same thing for the shot type
-				if (not self.options['difficulty_check'] or map[-1] != -1) and (not self.options['shot_type'] or map[-2] != -1):
-					self.handler.setBossBeaten(*map)
 
 		# If we have new locations, we send them to the server and add them to the list of checked locations
 		if new_locations:
@@ -372,12 +366,10 @@ class TouhouContext(CommonContext):
 		"""
 		Update the stage list in practice mode
 		"""
-		shot_type = self.options['shot_type']
-		difficulty_check = self.options['difficulty_check'] in DIFFICULTY_CHECK
 		mode = self.options['mode']
 
 		self.handler.updateStageList(mode == PRACTICE_MODE)
-		self.handler.updatePracticeScore(shot_type, difficulty_check)
+		self.handler.updatePracticeScore(self.location_mapping, self.previous_location_checked)
 
 	def addRingLinkTag(self):
 		self.tags.add("RingLink")
@@ -511,8 +503,8 @@ class TouhouContext(CommonContext):
 			mode = self.options['mode']
 			exclude_lunatic = self.options['exclude_lunatic']
 
-			if exclude_lunatic and self.difficulties == LUNATIC:
-				self.difficulties = HARD
+			if exclude_lunatic:
+				self.difficulties -= 1
 				self.handler.unlockDifficulty(self.difficulties)
 
 			while not self.exit_event.is_set() and self.handler.gameController and not self.inError:
