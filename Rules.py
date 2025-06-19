@@ -103,9 +103,11 @@ def connect_regions(multiworld: MultiWorld, player: int, source: str, exits: lis
 		rule = None
 		# Rules depend on the name of the target region
 		if "Mid" in exit:
-			rule = makeResourcesRule(player, lifeMid, bombsMid, difficultyMid)
+			difficulty = difficultyMid if not exclude_lunatic else max(0, difficultyMid-1)
+			rule = makeResourcesRule(player, lifeMid, bombsMid, difficulty)
 		elif "Late" in exit:
-			rule = makeResourcesRule(player, lifeEnd, bombsEnd, difficultyEnd)
+			difficulty = difficultyEnd if not exclude_lunatic else max(0, difficultyEnd-1)
+			rule = makeResourcesRule(player, lifeEnd, bombsEnd, difficulty)
 		elif "Extra" in exit and "Stage" not in exit:
 			rule = makeResourcesRule(player, lifeExtra, bombsExtra, 0)
 		elif "Stage" in exit:
