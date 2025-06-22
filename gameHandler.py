@@ -84,24 +84,26 @@ class gameHandler:
 				shot_type = location_data[3]
 				difficulty = location_data[4]
 
-				if difficulty >= 0:
-					if shot_type in SHOTS:
-						scores[character][shot_type][difficulty][stage][counter] += 1
+				# If it's not the Extra stage
+				if stage < 6:	
+					if difficulty >= 0:
+						if shot_type in SHOTS:
+							scores[character][shot_type][difficulty][stage][counter] += 1
+						else:
+							for shot in SHOTS:
+								scores[character][shot][difficulty][stage][counter] += 1
 					else:
-						for shot in SHOTS:
-							scores[character][shot][difficulty][stage][counter] += 1
-				else:
-					if shot_type in SHOTS:
-						scores[character][shot_type][EASY][stage][counter] += 1
-						scores[character][shot_type][NORMAL][stage][counter] += 1
-						scores[character][shot_type][HARD][stage][counter] += 1
-						scores[character][shot_type][LUNATIC][stage][counter] += 1
-					else:
-						for shot in SHOTS:
-							scores[character][shot][EASY][stage][counter] += 1
-							scores[character][shot][NORMAL][stage][counter] += 1
-							scores[character][shot][HARD][stage][counter] += 1
-							scores[character][shot][LUNATIC][stage][counter] += 1
+						if shot_type in SHOTS:
+							scores[character][shot_type][EASY][stage][counter] += 1
+							scores[character][shot_type][NORMAL][stage][counter] += 1
+							scores[character][shot_type][HARD][stage][counter] += 1
+							scores[character][shot_type][LUNATIC][stage][counter] += 1
+						else:
+							for shot in SHOTS:
+								scores[character][shot][EASY][stage][counter] += 1
+								scores[character][shot][NORMAL][stage][counter] += 1
+								scores[character][shot][HARD][stage][counter] += 1
+								scores[character][shot][LUNATIC][stage][counter] += 1
 
 		# We set the scores depending on the counter
 		for character in CHARACTERS:
