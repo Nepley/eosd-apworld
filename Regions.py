@@ -6,7 +6,7 @@ def get_regions(shot_type, difficulty_check, extra, exclude_lunatic):
 	regions = {}
 	characters = CHARACTERS_LIST if not shot_type else SHOT_TYPE_LIST
 	regions["Menu"] = {"locations": None, "exits": characters}
-	if difficulty_check not in DIFFICULTY_CHECK:
+	if not difficulty_check:
 		for character in characters:
 			regions[character] = {"locations": None, "exits": [f"[{character}] Early", f"[{character}] Mid", f"[{character}] Late"]}
 			regions[f"[{character}] Early"] = {"locations": None, "exits": [f"[{character}] Stage 1", f"[{character}] Stage 2"]}

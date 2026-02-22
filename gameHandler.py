@@ -21,6 +21,9 @@ class gameHandler:
 	bossBeaten = []
 	extraBeaten = []
 
+	limitLives = 8
+	limitBombs = 8
+
 	def __init__(self, pid):
 		self.gameController = gameController(pid)
 		self.reset()
@@ -29,12 +32,6 @@ class gameHandler:
 	#
 	# Init Resources
 	#
-
-	def giveLives(self):
-		self.gameController.setLives(self.lives)
-
-	def giveBombs(self):
-		self.gameController.setBombs(self.bombs)
 
 	def givePower(self):
 		self.gameController.setPower(self.power)
@@ -223,10 +220,10 @@ class gameHandler:
 	#
 
 	def getLives(self):
-		return self.lives
+		return min(self.lives, self.limitLives)
 
 	def getBombs(self):
-		return self.bombs
+		return min(self.bombs, self.limitBombs)
 
 	def getPower(self):
 		return self.power
@@ -299,8 +296,8 @@ class gameHandler:
 		if(self.lives < 8):
 			self.lives += 1
 
-		self.gameController.setPracticeStartingLives(self.lives)
-		self.gameController.setNormalStartingLives(self.lives)
+		self.gameController.setPracticeStartingLives(self.getLives())
+		self.gameController.setNormalStartingLives(self.getLives())
 
 		if addInLevel and self.gameController.getGameMode() == IN_GAME and self.gameController.getInDemo() != 1:
 			self.gameController.setLives(self.gameController.getLives() + 1)
@@ -309,9 +306,9 @@ class gameHandler:
 		if(self.bombs < 8):
 			self.bombs += 1
 
-		self.gameController.setPracticeStartingBombs(self.bombs)
-		self.gameController.setNormalStartingBombs(self.bombs)
-		self.gameController.setRespawnBombs(self.bombs)
+		self.gameController.setPracticeStartingBombs(self.getBombs())
+		self.gameController.setNormalStartingBombs(self.getBombs())
+		self.gameController.setRespawnBombs(self.getBombs())
 
 		if addInLevel and self.gameController.getGameMode() == IN_GAME and self.gameController.getInDemo() != 1:
 			self.gameController.setBombs(self.gameController.getBombs() + 1)
@@ -375,6 +372,19 @@ class gameHandler:
 
 	def unlockCharacter(self, character, shot):
 		self.characters[character][shot] = True
+
+	def setLivesLimit(self, limit):
+		if limit >= 0 and limit <= 8:
+			self.limitLives = limit
+			self.gameController.setPracticeStartingLives(self.getLives())
+			self.gameController.setNormalStartingLives(self.getLives())
+
+	def setBombsLimit(self, limit):
+		if limit >= 0 and limit <= 8:
+			self.limitBombs = limit
+			self.gameController.setPracticeStartingBombs(self.getBombs())
+			self.gameController.setNormalStartingBombs(self.getBombs())
+			self.gameController.setRespawnBombs(self.getBombs())
 
 	#
 	# Traps

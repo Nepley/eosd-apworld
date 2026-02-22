@@ -114,7 +114,7 @@ def connect_regions(multiworld: MultiWorld, player: int, source: str, exits: lis
 			if "Extra" not in exit:
 				level = int(exit[-1])-1
 				difficulty_value = 0
-				if difficulty_check in DIFFICULTY_CHECK:
+				if difficulty_check:
 					lower_difficulty = 4
 					for difficulty in DIFFICULTY_LIST:
 						lower_difficulty -= 1

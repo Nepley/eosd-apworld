@@ -23,9 +23,9 @@ def get_items_by_category(category: str) -> Dict[str, TItemData]:
 
 item_table: Dict[str, TItemData] = {
 	# Items
-	"+1 Life":				TItemData("Items", STARTING_ID + 0, ItemClassification.progression_skip_balancing, 8),
-	"+1 Bomb":				TItemData("Items", STARTING_ID + 1, ItemClassification.progression_skip_balancing, 8),
-	"Lower Difficulty":		TItemData("Items", STARTING_ID + 2, ItemClassification.progression_skip_balancing, 3),
+	"+1 Life":				TItemData("Items", STARTING_ID + 0, ItemClassification.progression, 8),
+	"+1 Bomb":				TItemData("Items", STARTING_ID + 1, ItemClassification.progression, 8),
+	"Lower Difficulty":		TItemData("Items", STARTING_ID + 2, ItemClassification.progression, 3),
 	"+1 Continue":			TItemData("[Normal] Items", STARTING_ID + 3, ItemClassification.useful, 3),
 
 	# Characters
@@ -35,21 +35,21 @@ item_table: Dict[str, TItemData] = {
 	"Marisa B - Illusion Laser":	TItemData("Characters", STARTING_ID + 103, ItemClassification.progression),
 
 	# Others
-	"Next Stage":					TItemData("[Global] Stages", STARTING_ID + 200, ItemClassification.progression_skip_balancing, 6),
-	"[Reimu] Next Stage":			TItemData("[Character] Stages", STARTING_ID + 201, ItemClassification.progression_skip_balancing, 6),
-	"[Marisa] Next Stage":			TItemData("[Character] Stages", STARTING_ID + 202, ItemClassification.progression_skip_balancing, 6),
-	"[Reimu A] Next Stage":			TItemData("[Shot Type] Stages", STARTING_ID + 203, ItemClassification.progression_skip_balancing, 6),
-	"[Reimu B] Next Stage":			TItemData("[Shot Type] Stages", STARTING_ID + 204, ItemClassification.progression_skip_balancing, 6),
-	"[Marisa A] Next Stage":		TItemData("[Shot Type] Stages", STARTING_ID + 205, ItemClassification.progression_skip_balancing, 6),
-	"[Marisa B] Next Stage":		TItemData("[Shot Type] Stages", STARTING_ID + 206, ItemClassification.progression_skip_balancing, 6),
+	"Next Stage":					TItemData("[Global] Stages", STARTING_ID + 200, ItemClassification.progression, 6),
+	"[Reimu] Next Stage":			TItemData("[Character] Stages", STARTING_ID + 201, ItemClassification.progression, 6),
+	"[Marisa] Next Stage":			TItemData("[Character] Stages", STARTING_ID + 202, ItemClassification.progression, 6),
+	"[Reimu A] Next Stage":			TItemData("[Shot Type] Stages", STARTING_ID + 203, ItemClassification.progression, 6),
+	"[Reimu B] Next Stage":			TItemData("[Shot Type] Stages", STARTING_ID + 204, ItemClassification.progression, 6),
+	"[Marisa A] Next Stage":		TItemData("[Shot Type] Stages", STARTING_ID + 205, ItemClassification.progression, 6),
+	"[Marisa B] Next Stage":		TItemData("[Shot Type] Stages", STARTING_ID + 206, ItemClassification.progression, 6),
 	"+25 Power Point":				TItemData("Power Point", STARTING_ID + 207, ItemClassification.useful, 5),
-	"Extra Stage":					TItemData("[Global] Extra Stage", STARTING_ID + 208, ItemClassification.progression_skip_balancing),
-	"[Reimu] Extra Stage":			TItemData("[Character] Extra Stage", STARTING_ID + 209, ItemClassification.progression_skip_balancing),
-	"[Marisa] Extra Stage":			TItemData("[Character] Extra Stage", STARTING_ID + 210, ItemClassification.progression_skip_balancing),
-	"[Reimu A] Extra Stage":		TItemData("[Shot Type] Extra Stage", STARTING_ID + 211, ItemClassification.progression_skip_balancing),
-	"[Reimu B] Extra Stage":		TItemData("[Shot Type] Extra Stage", STARTING_ID + 212, ItemClassification.progression_skip_balancing),
-	"[Marisa A] Extra Stage":		TItemData("[Shot Type] Extra Stage", STARTING_ID + 213, ItemClassification.progression_skip_balancing),
-	"[Marisa B] Extra Stage":		TItemData("[Shot Type] Extra Stage", STARTING_ID + 214, ItemClassification.progression_skip_balancing),
+	"Extra Stage":					TItemData("[Global] Extra Stage", STARTING_ID + 208, ItemClassification.progression),
+	"[Reimu] Extra Stage":			TItemData("[Character] Extra Stage", STARTING_ID + 209, ItemClassification.progression),
+	"[Marisa] Extra Stage":			TItemData("[Character] Extra Stage", STARTING_ID + 210, ItemClassification.progression),
+	"[Reimu A] Extra Stage":		TItemData("[Shot Type] Extra Stage", STARTING_ID + 211, ItemClassification.progression),
+	"[Reimu B] Extra Stage":		TItemData("[Shot Type] Extra Stage", STARTING_ID + 212, ItemClassification.progression),
+	"[Marisa A] Extra Stage":		TItemData("[Shot Type] Extra Stage", STARTING_ID + 213, ItemClassification.progression),
+	"[Marisa B] Extra Stage":		TItemData("[Shot Type] Extra Stage", STARTING_ID + 214, ItemClassification.progression),
 
 	# Endings
 	"[Reimu] Ending - Remilia":		TItemData("Endings", STARTING_ID + 300, ItemClassification.progression, 2),
@@ -70,4 +70,11 @@ item_table: Dict[str, TItemData] = {
 	"Aya Speed":			TItemData("Traps", STARTING_ID + 506, ItemClassification.trap),
 	"Freeze":				TItemData("Traps", STARTING_ID + 507, ItemClassification.trap),
 	"Power Point Drain":	TItemData("Traps", STARTING_ID + 508, ItemClassification.trap),
+}
+
+item_groups: Dict[str, str] = {
+	"Reimu A": ["Reimu A - Homing Amulet"],
+	"Reimu B": ["Reimu B - Persuasion Needle"],
+	"Marisa A": ["Marisa A - Magic Missile"],
+	"Marisa B": ["Marisa B - Illusion Laser"],
 }

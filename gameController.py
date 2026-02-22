@@ -419,6 +419,57 @@ class gameController:
 	def getMarisaBExtra(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrMarisaBExtra, 1))
 
+	def getCharacterDifficulty(self, character, shot, difficulty):
+		result = None
+		if character == REIMU:
+			if shot == SHOT_A:
+				if difficulty == EASY:
+					result = self.getReimuAEasy()
+				elif difficulty == NORMAL:
+					result = self.getReimuANormal()
+				elif difficulty == HARD:
+					result = self.getReimuAHard()
+				elif difficulty == LUNATIC:
+					result = self.getReimuALunatic()
+				elif difficulty == EXTRA:
+					result = self.getReimuAExtra()
+			else:
+				if difficulty == EASY:
+					result = self.getReimuBEasy()
+				elif difficulty == NORMAL:
+					result = self.getReimuBNormal()
+				elif difficulty == HARD:
+					result = self.getReimuBHard()
+				elif difficulty == LUNATIC:
+					result = self.getReimuBLunatic()
+				elif difficulty == EXTRA:
+					result = self.getReimuBExtra()
+		elif character == MARISA:
+			if shot == SHOT_A:
+				if difficulty == EASY:
+					result = self.getMarisaAEasy()
+				elif difficulty == NORMAL:
+					result = self.getMarisaANormal()
+				elif difficulty == HARD:
+					result = self.getMarisaAHard()
+				elif difficulty == LUNATIC:
+					result = self.getMarisaALunatic()
+				elif difficulty == EXTRA:
+					result = self.getMarisaAExtra()
+			else:
+				if difficulty == EASY:
+					result = self.getMarisaBEasy()
+				elif difficulty == NORMAL:
+					result = self.getMarisaBNormal()
+				elif difficulty == HARD:
+					result = self.getMarisaBHard()
+				elif difficulty == LUNATIC:
+					result = self.getMarisaBLunatic()
+				elif difficulty == EXTRA:
+					result = self.getMarisaBExtra()
+
+		return result
+
 	def getInput(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrInput, 1))
 

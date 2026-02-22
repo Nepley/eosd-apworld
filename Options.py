@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from Options import Choice, Range, Option, Toggle, DeathLink, PerGameCommonOptions
+from Options import Choice, Range, Toggle, PerGameCommonOptions
 
 class Mode(Choice):
 	"""
@@ -112,16 +112,17 @@ class ShotTypeCheck(Toggle):
 	""""If each shot type have their own check and are not just separated by character"""
 	display_name = "Shot Type Check"
 
-class DifficultyCheck(Choice):
+class DifficultyCheck(Toggle):
 	"""
 	If checks are separated by difficulty.
-    If true_with_lower, the check of the highest difficulty include the check of the lower difficulties that are unlocked
-    If you are playing in Normal Mode, it will force the difficulty to be static
 	"""
 	display_name = "Difficulty Check"
-	option_false = 0
-	option_true = 1
-	option_true_with_lower = 2
+
+class CheckMultipleDifficulty(Toggle):
+	"""
+	For difficulty check, choose if the check of the highest difficulty include the check of the lower difficulties that are unlocked. Can be changed later.
+	"""
+	display_name = "Multiple Difficulty Check"
 
 class Goal(Choice):
 	"""If the Extra Stage is included, determine which boss is the goal."""
@@ -142,11 +143,51 @@ class EndingRequired(Choice):
 	option_all_shot_types = 2
 	default = 0
 
+class DeathLink(Toggle):
+	"""
+	When you die, everyone who enabled death link dies. Of course, the reverse is true too. Can be changed later.
+	"""
+	display_name = "Death Link"
+
+class DeathLinkTrigger(Choice):
+	"""
+	When does a death link is triggerd. Can be changed later.
+    Life: Send a death link when losing a life
+    Game Over: Send a death link when getting a game over
+	"""
+	display_name = "Death Link Trigger"
+	option_life = 0
+	option_game_over = 1
+	default = 0
+
+class DeathLinkAmnesty(Range):
+	"""
+	Number of death before sending a DeathLink. Can be changed later.
+	"""
+	display_name = "DeathLink Amnesty"
+	range_start = 0
+	range_end = 10
+	default = 0
+
 class RingLink(Toggle):
 	"""
-	Whether your in-level Power Point gain/loss is linked to other players
+	Whether your in-level Power Point gain/loss is linked to other players. Can be changed later.
 	"""
 	display_name = "Ring Link"
+
+class LimitLives(Range):
+	"""Limit on the maximum number of lives you can have. It only apply on the client, not on the item pool or logic. Can be changed later."""
+	display_name = "Lives limit"
+	range_start = 0
+	range_end = 8
+	default = 8
+
+class LimitBombs(Range):
+	"""Limit on the maximum number of bombs you can have. It only apply on the client, not on the item pool generation or logic. Can be changed later"""
+	display_name = "Bombs limit"
+	range_start = 0
+	range_end = 8
+	default = 8
 
 class Traps(Range):
 	"""Percentage of fillers that are traps"""
@@ -261,10 +302,15 @@ class Th06Options(PerGameCommonOptions):
 	number_bomb_extra: NumberBombsExtra
 	shot_type: ShotTypeCheck
 	difficulty_check: DifficultyCheck
+	check_multiple_difficulty: CheckMultipleDifficulty
 	goal: Goal
 	ending_required: EndingRequired
 	death_link: DeathLink
+	death_link_trigger: DeathLinkTrigger
+	death_link_amnesty: DeathLinkAmnesty
 	ring_link: RingLink
+	limit_lives: LimitLives
+	limit_bombs: LimitBombs
 	traps: Traps
 	max_rank_trap: MaxRankTrap
 	power_point_trap: PowerPointTrap

@@ -30,7 +30,33 @@ class TWorld(World):
 	location_name_to_id = {name: id for name, id in location_table.items()}
 
 	def fill_slot_data(self) -> dict:
-		return {option_name: getattr(self.options, option_name).value for option_name in self.options_dataclass.__dataclass_fields__.keys()}
+		data = {
+			"mode": self.options.mode.value,
+			"stage_unlock": self.options.stage_unlock.value,
+			"exclude_lunatic": self.options.exclude_lunatic.value,
+			"number_life_mid": self.options.number_life_mid.value,
+			"number_bomb_mid": self.options.number_bomb_mid.value,
+			"difficulty_mid": self.options.difficulty_mid.value,
+			"number_life_end": self.options.number_life_end.value,
+			"number_bomb_end": self.options.number_bomb_end.value,
+			"difficulty_end": self.options.difficulty_end.value,
+			"extra_stage": self.options.extra_stage.value,
+			"number_life_extra": self.options.number_life_extra.value,
+			"number_bomb_extra": self.options.number_bomb_extra.value,
+			"shot_type": self.options.shot_type.value,
+			"difficulty_check": self.options.difficulty_check.value,
+			"check_multiple_difficulty": self.options.check_multiple_difficulty.value,
+			"goal": self.options.goal.value,
+			"ending_required": self.options.ending_required.value,
+			"death_link": self.options.death_link.value,
+			"death_link_trigger": self.options.death_link_trigger.value,
+			"death_link_amnesty": self.options.death_link_amnesty.value,
+			"ring_link": self.options.ring_link.value,
+			"limit_lives": self.options.limit_lives.value,
+			"limit_bombs": self.options.limit_bombs.value,
+		}
+
+		return data
 
 	def create_items(self):
 		item_pool: List[TItem] = []
