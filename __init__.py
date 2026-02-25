@@ -174,36 +174,30 @@ class TWorld(World):
 		for character in character_list:
 			item_pool += [self.create_item(character) for _ in range(0, 1)]
 
-		# Creating and placing Endings
-		ending_normal_reimu = self.create_item("[Reimu] Ending - Remilia")
-		ending_normal_marisa = self.create_item("[Marisa] Ending - Remilia")
-		ending_extra_reimu = self.create_item("[Reimu] Ending - Flandre")
-		ending_extra_marisa = self.create_item("[Marisa] Ending - Flandre")
-
 		# If we have the extra stage and the extra boss is a potential goal
 		if extra and goal != ENDING_NORMAL:
 			if shot_type:
-				self.multiworld.get_location("[Reimu A] Stage Extra Clear", self.player).place_locked_item(ending_extra_reimu)
-				self.multiworld.get_location("[Reimu B] Stage Extra Clear", self.player).place_locked_item(ending_extra_reimu)
-				self.multiworld.get_location("[Marisa A] Stage Extra Clear", self.player).place_locked_item(ending_extra_marisa)
-				self.multiworld.get_location("[Marisa B] Stage Extra Clear", self.player).place_locked_item(ending_extra_marisa)
+				self.multiworld.get_location("[Reimu A] Stage Extra Clear", self.player).place_locked_item(self.create_item("[Reimu] Ending - Flandre"))
+				self.multiworld.get_location("[Reimu B] Stage Extra Clear", self.player).place_locked_item(self.create_item("[Reimu] Ending - Flandre"))
+				self.multiworld.get_location("[Marisa A] Stage Extra Clear", self.player).place_locked_item(self.create_item("[Marisa] Ending - Flandre"))
+				self.multiworld.get_location("[Marisa B] Stage Extra Clear", self.player).place_locked_item(self.create_item("[Marisa] Ending - Flandre"))
 				number_placed_item += 4
 			else:
-				self.multiworld.get_location("[Reimu] Stage Extra Clear", self.player).place_locked_item(ending_extra_reimu)
-				self.multiworld.get_location("[Marisa] Stage Extra Clear", self.player).place_locked_item(ending_extra_marisa)
+				self.multiworld.get_location("[Reimu] Stage Extra Clear", self.player).place_locked_item(self.create_item("[Reimu] Ending - Flandre"))
+				self.multiworld.get_location("[Marisa] Stage Extra Clear", self.player).place_locked_item(self.create_item("[Marisa] Ending - Flandre"))
 				number_placed_item += 2
 
 		# If the final boss is a potential goal
 		if not extra or goal != ENDING_EXTRA:
 			if shot_type:
-				self.multiworld.get_location("[Reimu A] Stage 6 Clear", self.player).place_locked_item(ending_normal_reimu)
-				self.multiworld.get_location("[Reimu B] Stage 6 Clear", self.player).place_locked_item(ending_normal_reimu)
-				self.multiworld.get_location("[Marisa A] Stage 6 Clear", self.player).place_locked_item(ending_normal_marisa)
-				self.multiworld.get_location("[Marisa B] Stage 6 Clear", self.player).place_locked_item(ending_normal_marisa)
+				self.multiworld.get_location("[Reimu A] Stage 6 Clear", self.player).place_locked_item(self.create_item("[Reimu] Ending - Remilia"))
+				self.multiworld.get_location("[Reimu B] Stage 6 Clear", self.player).place_locked_item(self.create_item("[Reimu] Ending - Remilia"))
+				self.multiworld.get_location("[Marisa A] Stage 6 Clear", self.player).place_locked_item(self.create_item("[Marisa] Ending - Remilia"))
+				self.multiworld.get_location("[Marisa B] Stage 6 Clear", self.player).place_locked_item(self.create_item("[Marisa] Ending - Remilia"))
 				number_placed_item += 4
 			else:
-				self.multiworld.get_location("[Reimu] Stage 6 Clear", self.player).place_locked_item(ending_normal_reimu)
-				self.multiworld.get_location("[Marisa] Stage 6 Clear", self.player).place_locked_item(ending_normal_marisa)
+				self.multiworld.get_location("[Reimu] Stage 6 Clear", self.player).place_locked_item(self.create_item("[Reimu] Ending - Remilia"))
+				self.multiworld.get_location("[Marisa] Stage 6 Clear", self.player).place_locked_item(self.create_item("[Marisa] Ending - Remilia"))
 				number_placed_item += 2
 
 		if traps > 0:
