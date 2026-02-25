@@ -114,8 +114,13 @@ class TWorld(World):
 
 			# If we are in practice mode and the stage progression is not progressive, we might have to change the quantity
 			if data.category == "Power Point" and mode == PRACTICE_MODE and stage_unlock != STAGE_GLOBAL:
-				# If we have no addition check, we remove 3 Power Point item
-				quantity = quantity-3 if not shot_type and not difficulty_check and extra == NO_EXTRA else quantity
+				# Reduce Power Points to match available locations
+				# Extra adds 6 locs but consumes 4 (stage unlock + endings), so only -1 vs -3
+				if not shot_type and not difficulty_check:
+					if extra == NO_EXTRA:
+						quantity -= 3
+					else:
+						quantity -= 1
 
 			# Will be added later
 			if data.category in ["[Global] Extra Stage", "[Character] Extra Stage", "[Shot Type] Extra Stage"]:
