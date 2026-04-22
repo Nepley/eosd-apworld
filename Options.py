@@ -32,7 +32,7 @@ class StageUnlock(Choice):
 	option_by_shot_type = 2
 
 class ExcludeLunatic(Toggle):
-	"""If the Lunatic difficulty is excluded"""
+	"""Exclude Lunatic difficulty. Start on Hard instead."""
 	display_name = "Exclude Lunatic difficulty"
 
 class NumberLifeMid(Range):
@@ -109,7 +109,7 @@ class NumberBombsExtra(Range):
 	default = 0
 
 class ShotTypeCheck(Toggle):
-	""""If each shot type have their own check and are not just separated by character"""
+	"""If each shot type have their own check and are not just separated by character"""
 	display_name = "Shot Type Check"
 
 class DifficultyCheck(Toggle):
