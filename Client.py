@@ -2,8 +2,11 @@ from typing import Optional
 import asyncio
 import colorama
 import random
+import subprocess
 import time
 import traceback
+
+from settings import get_settings
 
 from .gameHandler import *
 from .guardRail import *
@@ -174,6 +177,19 @@ class TouhouClientProcessor(ClientCommandProcessor):
 		else:
 			logger.error("Limits cannot be accessed before connecting to the game and server")
 			return False
+
+	def _cmd_launch(self):
+		"""Launch Touhou EOSD"""
+		game_exe = get_settings().touhou_eosd_settings.game_exe
+
+		if not game_exe:
+			logger.error("No game executable specified")
+			return False
+
+		try:
+			subprocess.Popen([game_exe], close_fds=True)
+		except OSError(e):
+			logger.error(f"Failed to launch Touhou: {e.strerror}")
 
 class TouhouContext(CommonContext):
 	"""Touhou Game Context"""
