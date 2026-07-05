@@ -57,5 +57,6 @@ Normal Mode can be played with a dynamic difficulty or a static one.
 **Backup your score.dat if you care about your scores, practice stage access and Extra unlock**
 
 1. Launch the game
-2. Launch and connect the client "Touhou EoSD" found in the archipelago launcher to the server.
-3. If the message "Touhou EoSD process found. Starting loop..." appeared, you're good to go
+2. Launch the client "Touhou EoSD" found in the Archipelago launcher
+3. Connect the client to the server.
+4. If the message "Touhou EoSD process found. Starting loop..." appeared, you're good to go
