@@ -1,8 +1,11 @@
-from typing import List
+import os
+from typing import List, ClassVar
 from .Variables import *
 
+import settings
 from worlds.AutoWorld import World
 from worlds.LauncherComponents import Component, components, launch_subprocess, Type
+
 from .Items import TItem, get_items_by_category, item_table
 from .Locations import location_table
 from .Options import Th06Options
@@ -21,10 +24,20 @@ components.append(Component(
 	component_type=Type.CLIENT
 ))
 
+class TSettings(settings.Group):
+	class TGameExe(settings.UserFilePath):
+		"""File path to the Touhou EOSD executable"""
+		description = "Touhou EOSD Executable"
+	
+	game_exe: TGameExe = TGameExe("東方紅魔郷.exe")
+
 class TWorld(World):
 	game = DISPLAY_NAME
 	options: Th06Options
 	options_dataclass = Th06Options
+
+	settings_key = "touhou_eosd_settings"
+	settings: ClassVar[TSettings]
 
 	item_name_to_id = {name: data.code for name, data in item_table.items()}
 	location_name_to_id = {name: id for name, id in location_table.items()}

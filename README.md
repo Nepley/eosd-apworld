@@ -60,3 +60,14 @@ Normal Mode can be played with a dynamic difficulty or a static one.
 2. Launch the client "Touhou EoSD" found in the Archipelago launcher
 3. Connect the client to the server.
 4. If the message "Touhou EoSD process found. Starting loop..." appeared, you're good to go
+
+## Linux Notes
+
+The Windows version of Archipelago must be installed in the same Wine prefix as Touhou. Proton will not allow the client to connect, please use Wine 10 or below
+
+1. Launch the client first
+2. Start the game with `/launch`
+    - You will be asked to select the Touhou exe when you first run this command
+3. Continue from Step 3 in the **How to use** section
+
+For quick startup, you can optionally set up a batch script which launches the Archipelago client and game simultaneously. You **cannot** launch the Archipelago client and game separately. Doing so will prevent the client from finding and connecting to the game
