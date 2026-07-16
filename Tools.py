@@ -22,14 +22,6 @@ async def calculate_file_checksum(file_path, hash_algorithm="sha1"):
 async def get_all_process():
 	"""Get all running processes."""
 	try:
-		# PowerShell command to get all process executable paths and PIDs
-		command = [
-			"powershell",
-			"-NoProfile",
-			"-Command",
-			"[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();",
-			"Get-Process | Where-Object { $_.Path -ne $null } | Select-Object -Property Id, Path | ConvertTo-Json"
-		]
 
 		pw = await asyncio.create_subprocess_exec("pwsh", "-NoProfile", "-Command", "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();", "Get-Process | Where-Object { $_.Path -ne $null } | Select-Object -Property Id, Path | ConvertTo-Json", stdout=asyncio.subprocess.PIPE, creationflags=0x08000000)
 
