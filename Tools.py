@@ -19,26 +19,25 @@ async def calculate_file_checksum(file_path, hash_algorithm="sha1"):
 	except (FileNotFoundError, PermissionError):
 		return None
 
+async def call_pwsh(pwsh_cmd):
+	pw = await asyncio.create_subprocess_exec(pwsh_cmd, "-NoProfile", "-Command", "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();", "Get-Process | Where-Object { $_.Path -ne $null } | Select-Object -Property Id, Path | ConvertTo-Json", stdout=asyncio.subprocess.PIPE, creationflags=0x08000000)
+
+	await asyncio.sleep(1)
+	result, errors = await pw.communicate()
+
+	return result
+
 async def get_all_process():
 	"""Get all running processes."""
 	try:
-		# PowerShell command to get all process executable paths and PIDs
-		command = [
-			"powershell",
-			"-NoProfile",
-			"-Command",
-			"[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();",
-			"Get-Process | Where-Object { $_.Path -ne $null } | Select-Object -Property Id, Path | ConvertTo-Json"
-		]
-
-		pw = await asyncio.create_subprocess_exec("powershell", "-NoProfile", "-Command", "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new();", "Get-Process | Where-Object { $_.Path -ne $null } | Select-Object -Property Id, Path | ConvertTo-Json", stdout=asyncio.subprocess.PIPE, creationflags=0x08000000)
-
-		await asyncio.sleep(1)
-		result, errors = await pw.communicate()
-
+		result = await call_pwsh("powershell")
 		return json.loads(result)
-	except Exception as e:
-		print(f"Unexpected error: {e}")
+	except Exception:
+		try:
+			result = await call_pwsh("pwsh")
+			return json.loads(result)
+		except Exception as e:
+			print(f"Unexpected error: {e}")
 
 async def find_process(name = GAME_NAME, target_checksum = GAME_HASH, hash_algorithm="sha1"):
 	"""Find a process by name or checksum."""
