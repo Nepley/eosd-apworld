@@ -1,4 +1,4 @@
-from .Variables import *
+from .variables.globals import *
 from BaseClasses import Location
 
 class TLocation(Location):

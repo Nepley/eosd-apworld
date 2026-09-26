@@ -1,6 +1,5 @@
-import os
 from typing import List, ClassVar
-from .Variables import *
+from .variables.globals import *
 
 import settings
 from worlds.AutoWorld import World

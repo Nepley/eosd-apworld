@@ -1005,9 +1005,17 @@ class TouhouContext(CommonContext):
 		self.handler = None
 
 		while not self.handler:
-			pid = await find_process()
-			if pid:
-				self.handler = gameHandler(pid)
+			for game in GAMES:
+				try:
+					if game["checksum"] != "":
+						pid = await find_process(game["process"], game["checksum"])
+					else:
+						pid = game["process"]
+
+					if pid:
+						self.handler = gameHandler(pid, game["name"])
+				except:
+					pass
 			await asyncio.sleep(2)
 
 	async def reconnect_to_game(self):
@@ -1016,9 +1024,17 @@ class TouhouContext(CommonContext):
 		"""
 
 		while not self.handler.gameController:
-			pid = await find_process()
-			if pid:
-				self.handler.reconnect(pid)
+			for game in GAMES:
+				try:
+					if game["checksum"] != "":
+						pid = await find_process(game["process"], game["checksum"])
+					else:
+						pid = game["process"]
+
+					if pid:
+						self.handler.reconnect(pid, game["name"])
+				except:
+					pass
 			await asyncio.sleep(2)
 
 async def game_watcher(ctx: TouhouContext):
@@ -1064,7 +1080,7 @@ async def game_watcher(ctx: TouhouContext):
 			loops.append(asyncio.create_task(ctx.menu_loop()))
 			loops.append(asyncio.create_task(ctx.trap_loop()))
 			loops.append(asyncio.create_task(ctx.message_loop()))
-			loops.append(asyncio.create_task(ctx.guard_rail_loop()))
+			# loops.append(asyncio.create_task(ctx.guard_rail_loop()))
 			loops.append(asyncio.create_task(ctx.death_link_loop()))
 			loops.append(asyncio.create_task(ctx.ring_link_loop()))
 

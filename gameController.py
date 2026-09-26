@@ -1,171 +1,102 @@
 import pymem
-from .Variables import *
+from .variables.globals import *
+from .variables import th06
+from .variables import th06c
 
 class gameController:
 	"""Class accessing the game memory"""
-	pm = None
-
-	# Player
-	addrStage = None
-	addrDifficulty = None
-	addrCharacter = None
-	addrRank = None
-	addrShotType = None
-
-	# Resources
-	addrLives = None
-	addrBombs = None
-	addrPower = None
-	addrContinues = None
-
-	# Starting Resources
-	addrPracticeStartingLives = None
-	addrNormalStartingLives = None
-	addrPracticeStartingLives = None
-	addrNormalStartingBombs = None
-	addrRespawnBombs = None
-
-	# Stats
-	addrMisses = None
-
-	# Practice stage access
-	addrReimuAEasy = None
-	addrReimuANormal = None
-	addrReimuAHard = None
-	addrReimuALunatic = None
-
-	addrReimuBEasy = None
-	addrReimuBNormal = None
-	addrReimuBHard = None
-	addrReimuBLunatic = None
-
-	addrMarisaAEasy = None
-	addrMarisaANormal = None
-	addrMarisaAHard = None
-	addrMarisaALunatic = None
-
-	addrMarisaBEasy = None
-	addrMarisaBNormal = None
-	addrMarisaBHard = None
-	addrMarisaBLunatic = None
-
-	# Extra stage access
-	addrReimuAExtra = None
-	addrReimuBExtra = None
-	addrMarisaAExtra = None
-	addrMarisaBExtra = None
-
-	# Practice stage score
-	addrPracticeScore = None
-
-	# Character speed
-	addrNormalSpeed = None
-	addrFocusSpeed = None
-	addrNormalSpeedD = None
-	addrFocusSpeedD = None
-
-	# FPS
-	addrFpsText = None
-	addrFpsUpdate = None
-
-	# Other
-	addrControllerHandle = None
-	addrInput = None
-	addrGameMode = None
-	addrMenu = None
-	addrMenuCursor = None
-	addrInDemo = None
-	addrIsBossPresent = None
-	addrKillCondition = None
-	addrCharacterLock = None
-	addrForceExtra = None
-
-	# Sound
-	addrCustomSoundId = None
-	addrSoundHack1 = None
-	addrSoundHack2 = None
-
-	# Difficulty
-	addrDifficultyDown = None
-	addrDifficultyUp = None
-	addrDifficutlyCondition = None
-
-	def __init__(self, pid):
+	def __init__(self, pid, name):
 		self.pm = pymem.Pymem(pid)
+		self.name = name
 
-		self.addrStage = self.pm.base_address+ADDR_STAGE
-		self.addrDifficulty = self.pm.base_address+ADDR_DIFFICULTY
-		self.addrRank = self.pm.base_address+ADDR_RANK
-		self.addrCharacter = self.pm.base_address+ADDR_CHARACTER
-		self.addrShotType = self.pm.base_address+ADDR_SHOT_TYPE
+		self.addresses = th06c if self.name == "th06c" else th06
 
-		self.addrLives = self.pm.base_address+ADDR_LIVES
-		self.addrBombs = self.pm.base_address+ADDR_BOMBS
-		self.addrPower = self.pm.base_address+ADDR_POWER
-		self.addrContinues = self.pm.base_address+ADDR_CONTINUE
+		self.addrStage = self.pm.base_address+self.addresses.ADDR_STAGE
+		self.addrDifficulty = self.pm.base_address+self.addresses.ADDR_DIFFICULTY
+		self.addrRank = self.pm.base_address+self.addresses.ADDR_RANK
+		self.addrCharacter = self.pm.base_address+self.addresses.ADDR_CHARACTER
+		self.addrShotType = self.pm.base_address+self.addresses.ADDR_SHOT_TYPE
 
-		self.addrPracticeStartingLives = self.pm.base_address+ADDR_PRACTICE_STARTING_LIVES
-		self.addrNormalStartingLives = self.pm.base_address+ADDR_NORMAL_STARTING_LIVES
-		self.addrPracticeStartingBombs = self.pm.base_address+ADDR_PRACTICE_STARTING_BOMBS
-		self.addrNormalStartingBombs = self.pm.base_address+ADDR_NORMAL_STARTING_BOMBS
-		self.addrRespawnBombs = self.pm.base_address+ADDR_RESPAWN_BOMBS
+		self.addrLives = self.pm.base_address+self.addresses.ADDR_LIVES
+		self.addrBombs = self.pm.base_address+self.addresses.ADDR_BOMBS
+		self.addrPower = self.pm.base_address+self.addresses.ADDR_POWER
+		self.addrContinues = self.pm.base_address+self.addresses.ADDR_CONTINUE
 
-		self.addrMisses = self.pm.base_address+ADDR_MISSES
+		if self.name == "th06c":
+			self.addrStartingLives = self.pm.base_address+self.addresses.ADDR_STARTING_LIVES
+			self.addrStartingBombs = self.pm.base_address+self.addresses.ADDR_STARTING_BOMBS
+			self.addrRespawnBombs = self.pm.base_address+self.addresses.ADDR_RESPAWN_BOMBS
+		else:
+			self.addrPracticeStartingLives = self.pm.base_address+self.addresses.ADDR_PRACTICE_STARTING_LIVES
+			self.addrNormalStartingLives = self.pm.base_address+self.addresses.ADDR_NORMAL_STARTING_LIVES
+			self.addrPracticeStartingBombs = self.pm.base_address+self.addresses.ADDR_PRACTICE_STARTING_BOMBS
+			self.addrNormalStartingBombs = self.pm.base_address+self.addresses.ADDR_NORMAL_STARTING_BOMBS
+			self.addrRespawnBombs = self.pm.base_address+self.addresses.ADDR_RESPAWN_BOMBS
 
-		self.addrReimuAEasy = self.pm.base_address+ADDR_REIMU_A_EASY
-		self.addrReimuANormal = self.pm.base_address+ADDR_REIMU_A_NORMAL
-		self.addrReimuAHard = self.pm.base_address+ADDR_REIMU_A_HARD
-		self.addrReimuALunatic = self.pm.base_address+ADDR_REIMU_A_LUNATIC
+		self.addrMisses = self.pm.base_address+self.addresses.ADDR_MISSES
 
-		self.addrReimuBEasy = self.pm.base_address+ADDR_REIMU_B_EASY
-		self.addrReimuBNormal = self.pm.base_address+ADDR_REIMU_B_NORMAL
-		self.addrReimuBHard = self.pm.base_address+ADDR_REIMU_B_HARD
-		self.addrReimuBLunatic = self.pm.base_address+ADDR_REIMU_B_LUNATIC
+		self.addrReimuAEasy = self.pm.base_address+self.addresses.ADDR_REIMU_A_EASY
+		self.addrReimuANormal = self.pm.base_address+self.addresses.ADDR_REIMU_A_NORMAL
+		self.addrReimuAHard = self.pm.base_address+self.addresses.ADDR_REIMU_A_HARD
+		self.addrReimuALunatic = self.pm.base_address+self.addresses.ADDR_REIMU_A_LUNATIC
 
-		self.addrMarisaAEasy = self.pm.base_address+ADDR_MARISA_A_EASY
-		self.addrMarisaANormal = self.pm.base_address+ADDR_MARISA_A_NORMAL
-		self.addrMarisaAHard = self.pm.base_address+ADDR_MARISA_A_HARD
-		self.addrMarisaALunatic = self.pm.base_address+ADDR_MARISA_A_LUNATIC
+		self.addrReimuBEasy = self.pm.base_address+self.addresses.ADDR_REIMU_B_EASY
+		self.addrReimuBNormal = self.pm.base_address+self.addresses.ADDR_REIMU_B_NORMAL
+		self.addrReimuBHard = self.pm.base_address+self.addresses.ADDR_REIMU_B_HARD
+		self.addrReimuBLunatic = self.pm.base_address+self.addresses.ADDR_REIMU_B_LUNATIC
 
-		self.addrMarisaBEasy = self.pm.base_address+ADDR_MARISA_B_EASY
-		self.addrMarisaBNormal = self.pm.base_address+ADDR_MARISA_B_NORMAL
-		self.addrMarisaBHard = self.pm.base_address+ADDR_MARISA_B_HARD
-		self.addrMarisaBLunatic = self.pm.base_address+ADDR_MARISA_B_LUNATIC
+		self.addrMarisaAEasy = self.pm.base_address+self.addresses.ADDR_MARISA_A_EASY
+		self.addrMarisaANormal = self.pm.base_address+self.addresses.ADDR_MARISA_A_NORMAL
+		self.addrMarisaAHard = self.pm.base_address+self.addresses.ADDR_MARISA_A_HARD
+		self.addrMarisaALunatic = self.pm.base_address+self.addresses.ADDR_MARISA_A_LUNATIC
 
-		self.addrReimuAExtra = self.pm.base_address+ADDR_REIMU_A_EXTRA
-		self.addrReimuBExtra = self.pm.base_address+ADDR_REIMU_B_EXTRA
-		self.addrMarisaAExtra = self.pm.base_address+ADDR_MARISA_A_EXTRA
-		self.addrMarisaBExtra = self.pm.base_address+ADDR_MARISA_B_EXTRA
+		self.addrMarisaBEasy = self.pm.base_address+self.addresses.ADDR_MARISA_B_EASY
+		self.addrMarisaBNormal = self.pm.base_address+self.addresses.ADDR_MARISA_B_NORMAL
+		self.addrMarisaBHard = self.pm.base_address+self.addresses.ADDR_MARISA_B_HARD
+		self.addrMarisaBLunatic = self.pm.base_address+self.addresses.ADDR_MARISA_B_LUNATIC
 
-		self.addrControllerHandle = self.pm.base_address+ADDR_CONTROLLER_HANDLER
-		self.addrInput = self.pm.base_address+ADDR_INPUT
-		self.addrGameMode = self.pm.base_address+ADDR_GAME_MODE
-		self.addrMenu = self.pm.base_address+ADDR_MENU
-		self.addrMenuCursor = self.pm.base_address+ADDR_MENU_CURSOR
-		self.addrInDemo = self.pm.base_address+ADDR_IN_DEMO
-		self.addrIsBossPresent = self.pm.base_address+ADDR_IS_BOSS_PRESENT
+		self.addrReimuAExtra = self.pm.base_address+self.addresses.ADDR_REIMU_A_EXTRA
+		self.addrReimuBExtra = self.pm.base_address+self.addresses.ADDR_REIMU_B_EXTRA
+		self.addrMarisaAExtra = self.pm.base_address+self.addresses.ADDR_MARISA_A_EXTRA
+		self.addrMarisaBExtra = self.pm.base_address+self.addresses.ADDR_MARISA_B_EXTRA
+
+		if self.name == "th06c":
+			self.addrDemoTime1 = self.pm.base_address+self.addresses.ADDR_DEMO_TIMER_1
+			self.addrDemoTime2 = self.pm.base_address+self.addresses.ADDR_DEMO_TIMER_2
+		else:
+			self.addrInDemo = self.pm.base_address+self.addresses.ADDR_IN_DEMO
+
+		self.addrGameMode = self.pm.base_address+self.addresses.ADDR_GAME_MODE
+		self.addrMenu = self.pm.base_address+self.addresses.ADDR_MENU
+		self.addrMenuCursor = self.pm.base_address+self.addresses.ADDR_MENU_CURSOR
+		self.addrIsBossPresent = self.pm.base_address+self.addresses.ADDR_IS_BOSS_PRESENT
 		self.addrHpEnemies = []
 
-		self.addrKillCondition = self.pm.base_address+ADDR_KILL_CONDITION
+		self.addrKillCondition = self.pm.base_address+self.addresses.ADDR_KILL_CONDITION
 
-		self.addrCharacterLock = [self.pm.base_address+ADDR_LOCK_1, self.pm.base_address+ADDR_LOCK_2, self.pm.base_address+ADDR_LOCK_3, self.pm.base_address+ADDR_LOCK_4, self.pm.base_address+ADDR_LOCK_JMP]
-		self.addrForceExtra = self.pm.base_address+ADDR_LOCK_FORCE_EXTRA
+		self.addrCharacterLock = []
+		for lock in self.addresses.ADDR_LOCK:
+			self.addrCharacterLock.append(self.pm.base_address+lock)
 
-		self.addrNormalSpeed = self.pm.base_address+ADDR_NORMAL_SPEED
-		self.addrFocusSpeed = self.pm.base_address+ADDR_FOCUS_SPEED
-		self.addrNormalSpeedD = self.pm.base_address+ADDR_NORMAL_SPEED_D
-		self.addrFocusSpeedD = self.pm.base_address+ADDR_FOCUS_SPEED_D
+		self.addrForceExtra = self.pm.base_address+self.addresses.ADDR_LOCK_FORCE_EXTRA
 
-		self.addrCustomSoundId = self.pm.base_address+ADDR_CUSTOM_SOUND_ID
-		self.addrSoundHack1 = self.pm.base_address+ADDR_SOUND_HACK_1
-		self.addrSoundHack2 = self.pm.base_address+ADDR_SOUND_HACK_2
+		self.addrNormalSpeed = self.pm.base_address+self.addresses.ADDR_NORMAL_SPEED
+		self.addrFocusSpeed = self.pm.base_address+self.addresses.ADDR_FOCUS_SPEED
+		self.addrNormalSpeedD = self.pm.base_address+self.addresses.ADDR_NORMAL_SPEED_D
+		self.addrFocusSpeedD = self.pm.base_address+self.addresses.ADDR_FOCUS_SPEED_D
 
-		self.addrFpsText = self.pm.base_address+ADDR_FPS_TEXT
-		self.addrFpsUpdate = self.pm.base_address+ADDR_FPS_UPDATE
+		self.addrCustomSoundId = self.pm.base_address+self.addresses.ADDR_CUSTOM_SOUND_ID
 
-		self.addrDifficultyDown = self.pm.base_address+ADDR_DIFFICULTY_DOWN
-		self.addrDifficultyUp = self.pm.base_address+ADDR_DIFFICULTY_UP
-		self.addrDifficutlyCondition = self.pm.base_address+ADDR_DIFFICULTY_CONDITION
+		if self.name == "th06":
+			self.addrSoundHack1 = self.pm.base_address+self.addresses.ADDR_SOUND_HACK_1
+			self.addrSoundHack2 = self.pm.base_address+self.addresses.ADDR_SOUND_HACK_2
+
+		self.addrFpsText = self.pm.base_address+self.addresses.ADDR_FPS_TEXT
+		self.addrFpsUpdate = self.pm.base_address+self.addresses.ADDR_FPS_UPDATE
+
+		self.addrDifficultyDown = self.pm.base_address+self.addresses.ADDR_DIFFICULTY_DOWN
+		self.addrDifficultyUp = self.pm.base_address+self.addresses.ADDR_DIFFICULTY_UP
+		self.addrDifficutlyCondition = self.pm.base_address+self.addresses.ADDR_DIFFICULTY_CONDITION
 
 		self.addrPracticeScore = {
 			REIMU:
@@ -174,76 +105,76 @@ class gameController:
 					{
 						EASY:
 						[
-							self.pm.base_address+ADDR_REIMU_A_EASY_SCORE_1,
-							self.pm.base_address+ADDR_REIMU_A_EASY_SCORE_2,
-							self.pm.base_address+ADDR_REIMU_A_EASY_SCORE_3,
-							self.pm.base_address+ADDR_REIMU_A_EASY_SCORE_4,
-							self.pm.base_address+ADDR_REIMU_A_EASY_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_EASY_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_EASY_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_EASY_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_EASY_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_EASY_SCORE_5,
 						],
 						NORMAL:
 						[
-							self.pm.base_address+ADDR_REIMU_A_NORMAL_SCORE_1,
-							self.pm.base_address+ADDR_REIMU_A_NORMAL_SCORE_2,
-							self.pm.base_address+ADDR_REIMU_A_NORMAL_SCORE_3,
-							self.pm.base_address+ADDR_REIMU_A_NORMAL_SCORE_4,
-							self.pm.base_address+ADDR_REIMU_A_NORMAL_SCORE_5,
-							self.pm.base_address+ADDR_REIMU_A_NORMAL_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_NORMAL_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_NORMAL_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_NORMAL_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_NORMAL_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_NORMAL_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_NORMAL_SCORE_6,
 						],
 						HARD:
 						[
-							self.pm.base_address+ADDR_REIMU_A_HARD_SCORE_1,
-							self.pm.base_address+ADDR_REIMU_A_HARD_SCORE_2,
-							self.pm.base_address+ADDR_REIMU_A_HARD_SCORE_3,
-							self.pm.base_address+ADDR_REIMU_A_HARD_SCORE_4,
-							self.pm.base_address+ADDR_REIMU_A_HARD_SCORE_5,
-							self.pm.base_address+ADDR_REIMU_A_HARD_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_HARD_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_HARD_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_HARD_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_HARD_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_HARD_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_HARD_SCORE_6,
 						],
 						LUNATIC:
 						[
-							self.pm.base_address+ADDR_REIMU_A_LUNATIC_SCORE_1,
-							self.pm.base_address+ADDR_REIMU_A_LUNATIC_SCORE_2,
-							self.pm.base_address+ADDR_REIMU_A_LUNATIC_SCORE_3,
-							self.pm.base_address+ADDR_REIMU_A_LUNATIC_SCORE_4,
-							self.pm.base_address+ADDR_REIMU_A_LUNATIC_SCORE_5,
-							self.pm.base_address+ADDR_REIMU_A_LUNATIC_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_LUNATIC_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_LUNATIC_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_LUNATIC_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_LUNATIC_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_LUNATIC_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_REIMU_A_LUNATIC_SCORE_6,
 						],
 					},
 					SHOT_B:
 					{
 						EASY:
 						[
-							self.pm.base_address+ADDR_REIMU_B_EASY_SCORE_1,
-							self.pm.base_address+ADDR_REIMU_B_EASY_SCORE_2,
-							self.pm.base_address+ADDR_REIMU_B_EASY_SCORE_3,
-							self.pm.base_address+ADDR_REIMU_B_EASY_SCORE_4,
-							self.pm.base_address+ADDR_REIMU_B_EASY_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_EASY_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_EASY_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_EASY_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_EASY_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_EASY_SCORE_5,
 						],
 						NORMAL:
 						[
-							self.pm.base_address+ADDR_REIMU_B_NORMAL_SCORE_1,
-							self.pm.base_address+ADDR_REIMU_B_NORMAL_SCORE_2,
-							self.pm.base_address+ADDR_REIMU_B_NORMAL_SCORE_3,
-							self.pm.base_address+ADDR_REIMU_B_NORMAL_SCORE_4,
-							self.pm.base_address+ADDR_REIMU_B_NORMAL_SCORE_5,
-							self.pm.base_address+ADDR_REIMU_B_NORMAL_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_NORMAL_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_NORMAL_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_NORMAL_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_NORMAL_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_NORMAL_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_NORMAL_SCORE_6,
 						],
 						HARD:
 						[
-							self.pm.base_address+ADDR_REIMU_B_HARD_SCORE_1,
-							self.pm.base_address+ADDR_REIMU_B_HARD_SCORE_2,
-							self.pm.base_address+ADDR_REIMU_B_HARD_SCORE_3,
-							self.pm.base_address+ADDR_REIMU_B_HARD_SCORE_4,
-							self.pm.base_address+ADDR_REIMU_B_HARD_SCORE_5,
-							self.pm.base_address+ADDR_REIMU_B_HARD_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_HARD_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_HARD_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_HARD_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_HARD_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_HARD_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_HARD_SCORE_6,
 						],
 						LUNATIC:
 						[
-							self.pm.base_address+ADDR_REIMU_B_LUNATIC_SCORE_1,
-							self.pm.base_address+ADDR_REIMU_B_LUNATIC_SCORE_2,
-							self.pm.base_address+ADDR_REIMU_B_LUNATIC_SCORE_3,
-							self.pm.base_address+ADDR_REIMU_B_LUNATIC_SCORE_4,
-							self.pm.base_address+ADDR_REIMU_B_LUNATIC_SCORE_5,
-							self.pm.base_address+ADDR_REIMU_B_LUNATIC_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_LUNATIC_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_LUNATIC_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_LUNATIC_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_LUNATIC_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_LUNATIC_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_REIMU_B_LUNATIC_SCORE_6,
 						],
 					}
 
@@ -254,76 +185,76 @@ class gameController:
 					{
 						EASY:
 						[
-							self.pm.base_address+ADDR_MARISA_A_EASY_SCORE_1,
-							self.pm.base_address+ADDR_MARISA_A_EASY_SCORE_2,
-							self.pm.base_address+ADDR_MARISA_A_EASY_SCORE_3,
-							self.pm.base_address+ADDR_MARISA_A_EASY_SCORE_4,
-							self.pm.base_address+ADDR_MARISA_A_EASY_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_EASY_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_EASY_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_EASY_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_EASY_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_EASY_SCORE_5,
 						],
 						NORMAL:
 						[
-							self.pm.base_address+ADDR_MARISA_A_NORMAL_SCORE_1,
-							self.pm.base_address+ADDR_MARISA_A_NORMAL_SCORE_2,
-							self.pm.base_address+ADDR_MARISA_A_NORMAL_SCORE_3,
-							self.pm.base_address+ADDR_MARISA_A_NORMAL_SCORE_4,
-							self.pm.base_address+ADDR_MARISA_A_NORMAL_SCORE_5,
-							self.pm.base_address+ADDR_MARISA_A_NORMAL_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_NORMAL_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_NORMAL_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_NORMAL_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_NORMAL_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_NORMAL_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_NORMAL_SCORE_6,
 						],
 						HARD:
 						[
-							self.pm.base_address+ADDR_MARISA_A_HARD_SCORE_1,
-							self.pm.base_address+ADDR_MARISA_A_HARD_SCORE_2,
-							self.pm.base_address+ADDR_MARISA_A_HARD_SCORE_3,
-							self.pm.base_address+ADDR_MARISA_A_HARD_SCORE_4,
-							self.pm.base_address+ADDR_MARISA_A_HARD_SCORE_5,
-							self.pm.base_address+ADDR_MARISA_A_HARD_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_HARD_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_HARD_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_HARD_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_HARD_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_HARD_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_HARD_SCORE_6,
 						],
 						LUNATIC:
 						[
-							self.pm.base_address+ADDR_MARISA_A_LUNATIC_SCORE_1,
-							self.pm.base_address+ADDR_MARISA_A_LUNATIC_SCORE_2,
-							self.pm.base_address+ADDR_MARISA_A_LUNATIC_SCORE_3,
-							self.pm.base_address+ADDR_MARISA_A_LUNATIC_SCORE_4,
-							self.pm.base_address+ADDR_MARISA_A_LUNATIC_SCORE_5,
-							self.pm.base_address+ADDR_MARISA_A_LUNATIC_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_LUNATIC_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_LUNATIC_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_LUNATIC_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_LUNATIC_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_LUNATIC_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_MARISA_A_LUNATIC_SCORE_6,
 						],
 					},
 					SHOT_B:
 					{
 						EASY:
 						[
-							self.pm.base_address+ADDR_MARISA_B_EASY_SCORE_1,
-							self.pm.base_address+ADDR_MARISA_B_EASY_SCORE_2,
-							self.pm.base_address+ADDR_MARISA_B_EASY_SCORE_3,
-							self.pm.base_address+ADDR_MARISA_B_EASY_SCORE_4,
-							self.pm.base_address+ADDR_MARISA_B_EASY_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_EASY_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_EASY_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_EASY_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_EASY_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_EASY_SCORE_5,
 						],
 						NORMAL:
 						[
-							self.pm.base_address+ADDR_MARISA_B_NORMAL_SCORE_1,
-							self.pm.base_address+ADDR_MARISA_B_NORMAL_SCORE_2,
-							self.pm.base_address+ADDR_MARISA_B_NORMAL_SCORE_3,
-							self.pm.base_address+ADDR_MARISA_B_NORMAL_SCORE_4,
-							self.pm.base_address+ADDR_MARISA_B_NORMAL_SCORE_5,
-							self.pm.base_address+ADDR_MARISA_B_NORMAL_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_NORMAL_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_NORMAL_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_NORMAL_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_NORMAL_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_NORMAL_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_NORMAL_SCORE_6,
 						],
 						HARD:
 						[
-							self.pm.base_address+ADDR_MARISA_B_HARD_SCORE_1,
-							self.pm.base_address+ADDR_MARISA_B_HARD_SCORE_2,
-							self.pm.base_address+ADDR_MARISA_B_HARD_SCORE_3,
-							self.pm.base_address+ADDR_MARISA_B_HARD_SCORE_4,
-							self.pm.base_address+ADDR_MARISA_B_HARD_SCORE_5,
-							self.pm.base_address+ADDR_MARISA_B_HARD_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_HARD_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_HARD_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_HARD_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_HARD_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_HARD_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_HARD_SCORE_6,
 						],
 						LUNATIC:
 						[
-							self.pm.base_address+ADDR_MARISA_B_LUNATIC_SCORE_1,
-							self.pm.base_address+ADDR_MARISA_B_LUNATIC_SCORE_2,
-							self.pm.base_address+ADDR_MARISA_B_LUNATIC_SCORE_3,
-							self.pm.base_address+ADDR_MARISA_B_LUNATIC_SCORE_4,
-							self.pm.base_address+ADDR_MARISA_B_LUNATIC_SCORE_5,
-							self.pm.base_address+ADDR_MARISA_B_LUNATIC_SCORE_6,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_LUNATIC_SCORE_1,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_LUNATIC_SCORE_2,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_LUNATIC_SCORE_3,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_LUNATIC_SCORE_4,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_LUNATIC_SCORE_5,
+							self.pm.base_address+self.addresses.ADDR_MARISA_B_LUNATIC_SCORE_6,
 						],
 					}
 				}
@@ -470,14 +401,14 @@ class gameController:
 
 		return result
 
-	def getInput(self):
-		return int.from_bytes(self.pm.read_bytes(self.addrInput, 1))
-
 	def getGameMode(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrGameMode, 1))
 
 	def getInDemo(self):
-		return int.from_bytes(self.pm.read_bytes(self.addrInDemo, 1))
+		if self.name == "th06":
+			return int.from_bytes(self.pm.read_bytes(self.addrInDemo, 1))
+		else:
+			return 0
 
 	def getMenu(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrMenu, 1))
@@ -551,20 +482,21 @@ class gameController:
 	def setContinues(self, newContinue):
 		self.pm.write_short(self.addrContinues, newContinue)
 
-	def setPracticeStartingLives(self, newPracticeStartingLives):
-		self.pm.write_bytes(self.addrPracticeStartingLives, bytes([newPracticeStartingLives]), 1)
+	def setStartingLives(self, newStartingLives):
+		if self.name == "th06":
+			self.pm.write_bytes(self.addrPracticeStartingLives, bytes([newStartingLives]), 1)
+			self.pm.write_bytes(self.addrNormalStartingLives, bytes([newStartingLives]), 1)
+		else:
+			self.pm.write_bytes(self.addrStartingLives, bytes([newStartingLives]), 1)
 
-	def setNormalStartingLives(self, newNormalStartingLives):
-		self.pm.write_bytes(self.addrNormalStartingLives, bytes([newNormalStartingLives]), 1)
-
-	def setPracticeStartingBombs(self, newPracticeStartingBombs):
-		self.pm.write_bytes(self.addrPracticeStartingBombs, bytes([newPracticeStartingBombs]), 1)
-
-	def setNormalStartingBombs(self, newNormalStartingBombs):
-		self.pm.write_bytes(self.addrNormalStartingBombs, bytes([newNormalStartingBombs]), 1)
-
-	def setRespawnBombs(self, newRespawnBombs):
-		self.pm.write_bytes(self.addrRespawnBombs, bytes([newRespawnBombs]), 1)
+	def setStartingBombs(self, newStartingBombs):
+		if self.name == "th06":
+			self.pm.write_bytes(self.addrPracticeStartingBombs, bytes([newStartingBombs]), 1)
+			self.pm.write_bytes(self.addrNormalStartingBombs, bytes([newStartingBombs]), 1)
+			self.pm.write_bytes(self.addrRespawnBombs, bytes([newStartingBombs]), 1)
+		else:
+			self.pm.write_bytes(self.addrStartingBombs, bytes([newStartingBombs]), 1)
+			self.pm.write_bytes(self.addrRespawnBombs, bytes([newStartingBombs]), 1)
 
 	def setMisses(self, newMisses):
 		self.pm.write_short(self.addrMisses, newMisses)
@@ -684,13 +616,12 @@ class gameController:
 				elif difficulty == EXTRA:
 					self.setMarisaBExtra(newValue)
 
-	def setInput(self, newInput):
-		self.pm.write_bytes(self.addrInput, bytes([newInput]), 1)
-
 	def setDifficultyDown(self, difficultyDown):
 		self.pm.write_bytes(self.addrDifficultyDown, bytes([difficultyDown]), 1)
 
 	def setDifficultyUp(self, difficultyUp):
+		if self.name == "th06c":
+			difficultyUp = 255 if difficultyUp == 0 else difficultyUp - 1 
 		self.pm.write_bytes(self.addrDifficultyUp, bytes([difficultyUp]), 1)
 
 	def setNormalSpeed(self, newNormalSpeed):
@@ -712,50 +643,69 @@ class gameController:
 		return self.pm.write_int(self.addrPracticeScore[characterId][shotId][difficultyId][stageId], newScore)
 
 	def setKill(self, active):
-		if active:
-			self.pm.write_bytes(self.addrKillCondition, bytes([0x90, 0x90]), 2)
+		if self.name == "th06":
+			if active:
+				self.pm.write_bytes(self.addrKillCondition, bytes([0x90, 0x90]), 2)
+			else:
+				self.pm.write_bytes(self.addrKillCondition, bytes([0xEB, 0x22]), 2)
 		else:
-			self.pm.write_bytes(self.addrKillCondition, bytes([0xEB, 0x22]), 2)
+			if active:
+				self.pm.write_bytes(self.addrKillCondition, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 6)
+			else:
+				self.pm.write_bytes(self.addrKillCondition, bytes([0x0F, 0x87, 0xF7, 0x00, 0x00, 0x00]), 6)
 
 	def setLockToAllDifficulty(self):
 		for lock in self.addrCharacterLock:
 			self.pm.write_bytes(lock, bytes([0x90, 0x90]), 2)
 
-		self.pm.write_bytes(self.addrForceExtra, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 10)
-
-	def setControllerHandler(self, activate):
-		if activate:
-			self.pm.write_bytes(self.addrControllerHandle, bytes([0x66, 0xA3, 0x04, 0xD9, 0x69, 0x00]), 6)
-		else:
-			self.pm.write_bytes(self.addrControllerHandle, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 6)
+		if self.name == "th06":
+			self.pm.write_bytes(self.addrForceExtra, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 10)
 
 	def initSoundHack(self):
-		soundIdHex = hex(self.addrCustomSoundId)[2:]
-		soundId = [int(soundIdHex[i:i+2], 16) for i in range(0, len(soundIdHex), 2)]
-		self.pm.write_bytes(self.addrSoundHack2, bytes([0xC7, 0x05, soundId[2], soundId[1], soundId[0], 0x00, 0x20, 0x00, 0x00, 0x00,
-														0xE9, 0xBD, 0xB0, 0xFF, 0xFF]), 15)
+		if self.name == "th06":
+			soundIdHex = hex(self.addrCustomSoundId)[2:]
+			soundId = [int(soundIdHex[i:i+2], 16) for i in range(0, len(soundIdHex), 2)]
+			self.pm.write_bytes(self.addrSoundHack2, bytes([0xC7, 0x05, soundId[2], soundId[1], soundId[0], 0x00, 0x20, 0x00, 0x00, 0x00,
+															0xE9, 0xBD, 0xB0, 0xFF, 0xFF]), 15)
 
-		self.pm.write_bytes(self.addrSoundHack1, bytes([0x6A, 0x00,
-														0xEB, 0x08,
-														0x41,
-														0x00, 0x53, 0xCB,
-														0x41,
-														0x00, 0x41, 0xCB,
-														0xFF, 0x35, soundId[2], soundId[1], soundId[0], 0x00,
-														0xB9, 0x50, 0x3F, 0x6D, 0x00,
-														0xE8, 0x58, 0x46, 0x01, 0x00,
-														0xE9, 0x34, 0x4F, 0x00, 0x00,
-														0x5D,
-														0xC3]), 35)
+			self.pm.write_bytes(self.addrSoundHack1, bytes([0x6A, 0x00,
+															0xEB, 0x08,
+															0x41,
+															0x00, 0x53, 0xCB,
+															0x41,
+															0x00, 0x41, 0xCB,
+															0xFF, 0x35, soundId[2], soundId[1], soundId[0], 0x00,
+															0xB9, 0x50, 0x3F, 0x6D, 0x00,
+															0xE8, 0x58, 0x46, 0x01, 0x00,
+															0xE9, 0x34, 0x4F, 0x00, 0x00,
+															0x5D,
+															0xC3]), 35)
 
 	def setCustomSoundId(self, soundId = 0x0D):
-		self.pm.write_bytes(self.addrCustomSoundId, bytes([soundId]), 1)
+		if self.name == "th06":
+			self.pm.write_bytes(self.addrCustomSoundId, bytes([soundId]), 1)
+		else:
+			self.pm.write_int(self.addrCustomSoundId, soundId)
 
 	def initDifficultyHack(self):
-		self.pm.write_bytes(self.addrDifficutlyCondition, bytes([0xC6, 0x80]), 2)
+		if self.name == "th06":
+			self.pm.write_bytes(self.addrDifficutlyCondition, bytes([0xC6, 0x80]), 2)
+		else:
+			self.pm.write_bytes(self.addrDifficutlyCondition, bytes([0x3C, 0x00, 0x75, 0x07]), 4)
 
 	def setFpsUpdate(self, active):
-		if active:
-			self.pm.write_bytes(self.addrFpsUpdate, bytes([0xE8, 0x88, 0x83, 0x03, 0x00]), 5)
+		if self.name == "th06":
+			if active:
+				self.pm.write_bytes(self.addrFpsUpdate, bytes([0xE8, 0x88, 0x83, 0x03, 0x00]), 5)
+			else:
+				self.pm.write_bytes(self.addrFpsUpdate, bytes([0x90, 0x90, 0x90, 0x90, 0x90]), 5)
 		else:
-			self.pm.write_bytes(self.addrFpsUpdate, bytes([0x90, 0x90, 0x90, 0x90, 0x90]), 5)
+			if active:
+				self.pm.write_bytes(self.addrFpsUpdate, bytes([0x88, 0x02]), 2)
+			else:
+				self.pm.write_bytes(self.addrFpsUpdate, bytes([0x90, 0x90]), 2)
+
+	def disableDemo(self):
+		if self.name == "th06c":
+			self.pm.write_bytes(self.addrDemoTime1, bytes([0x90, 0x90]), 2)
+			self.pm.write_bytes(self.addrDemoTime2, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 6)

@@ -2,7 +2,7 @@ import asyncio
 import os
 import hashlib
 import json
-from .Variables import *
+from .variables.globals import *
 from .Mapping import CHAR_MAP, RED_CHAR_MAP
 from .Locations import location_table
 
@@ -39,7 +39,7 @@ async def get_all_process():
 		except Exception as e:
 			print(f"Unexpected error: {e}")
 
-async def find_process(name = GAME_NAME, target_checksum = GAME_HASH, hash_algorithm="sha1"):
+async def find_process(name, target_checksum, hash_algorithm="sha1"):
 	"""Find a process by name or checksum."""
 	processes = await get_all_process()
 	global process_already_checked_list
@@ -52,7 +52,7 @@ async def find_process(name = GAME_NAME, target_checksum = GAME_HASH, hash_algor
 			break
 
 	# If not found by name, check by checksum
-	if pid_game is None:
+	if pid_game is None and target_checksum != "":
 		for process in processes:
 			if os.path.isfile(process['Path']):
 				if process['Id'] not in process_already_checked_list:

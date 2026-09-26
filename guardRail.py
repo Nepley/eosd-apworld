@@ -1,4 +1,4 @@
-from .Variables import *
+from .variables.globals import *
 from .gameController import gameController
 from .gameHandler import gameHandler
 from .Tools import *

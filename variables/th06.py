@@ -1,106 +1,8 @@
-"""
-Variables
-"""
-
-GAME_NAME = "東方紅魔郷"
-GAME_HASH = "e61b4f4fea3802e926ef307f45166599c3e86555"
-DISPLAY_NAME = "Touhou Koumakyou ~ the Embodiment of Scarlet Devil"
-SHORT_NAME = "Touhou EoSD"
-
-REIMU = 0
-MARISA = 1
-CHARACTERS = [REIMU, MARISA]
-CHARACTER_NAME_TO_ID = {"Reimu": REIMU, "Marisa": MARISA}
-
-SHOT_A = 0
-SHOT_B = 1
-SHOTS = [SHOT_A, SHOT_B]
-SHOT_NAME_TO_ID = {"Reimu A": SHOT_A, "Reimu B": SHOT_B, "Marisa A": SHOT_A, "Marisa B": SHOT_B}
-
-EASY = 0
-NORMAL = 1
-HARD = 2
-LUNATIC = 3
-EXTRA = 4
-
-NO_EXTRA = 0
-EXTRA_LINEAR = 1
-EXTRA_APART = 2
-PRACTICE_MODE = 0
-NORMAL_DYNAMIC_MODE = 1
-NORMAL_STATIC_MODE = 2
-NORMAL_MODE = [NORMAL_STATIC_MODE, NORMAL_DYNAMIC_MODE]
-STAGE_GLOBAL = 0
-STAGE_BY_CHARACTER = 1
-STAGE_BY_SHOT_TYPE = 2
-
-IN_MENU = 1
-IN_GAME = 2
-IN_RESULT_SCREEN = 7
-
-MAIN_MENU = 0
-DIFFICULTY_MENU = 6
-CHARACTER_MENU = 7
-SHOT_TYPE_MENU = 13
-STAGE_SELECT_MENU = 19
-
-ENDING_NORMAL = 0
-ENDING_EXTRA = 1
-ENDING_BOTH = 2
-ENDINGS = [ENDING_NORMAL, ENDING_EXTRA]
-ONE_ENDING = 0
-ALL_CHARACTER_ENDING = 1
-ALL_SHOT_TYPE_ENDING = 2
-
-DEATH_LINK_LIFE = 0
-DEATH_LINK_GAME_OVER = 1
-
-WHITE_TEXT = 0
-RED_TEXT = 1
-FLASHING_TEXT = 2
-
-"""
-Generation Variables
-"""
-
-STARTING_ID = 60000
-CHARACTERS_LIST = ["Reimu", "Marisa"]
-SHOT_TYPE_LIST = ["Reimu A", "Reimu B", "Marisa A", "Marisa B"]
-CHARACTER_SHOT_LINK = {"Reimu": ["Reimu A", "Reimu B"], "Marisa": ["Marisa A", "Marisa B"]}
-ALL_CHARACTERS_LIST = CHARACTERS_LIST + SHOT_TYPE_LIST
-CHARACTER_TO_ITEM = {
-    "Reimu": ["Reimu A - Homing Amulet", "Reimu B - Persuasion Needle"],
-    "Marisa": ["Marisa A - Magic Missile", "Marisa B - Illusion Laser"],
-    "Reimu A": ["Reimu A - Homing Amulet"],
-    "Reimu B": ["Reimu B - Persuasion Needle"],
-    "Marisa A": ["Marisa A - Magic Missile"],
-    "Marisa B": ["Marisa B - Illusion Laser"]
-}
-DIFFICULTY_LIST = ["Easy", "Normal", "Hard", "Lunatic"]
-EXTRA_CHECKS = ["Patchouli - MidBoss",	"Flandre Defeated"]
-STAGES_LIST = [
-	["Rumia - MidBoss", "Rumia Defeated"],
-	["Daiyousei Defeated", "Cirno Defeated"],
-	["Meiling - MidBoss", "Meiling Defeated"],
-	["Koakuma Defeated", "Patchouli Defeated"],
-	["Sakuya - MidBoss 1", "Sakuya Defeated"],
-	["Sakuya - MidBoss 2", "Remilia Defeated"],
-	EXTRA_CHECKS
-]
-ENDING_NORMAL_ITEM = "Ending - Remilia"
-ENDING_EXTRA_ITEM = "Ending - Flandre"
-
-
-"""
-Addresses
-"""
-
 #General
 ADDR_GAME_MODE = 0x002C6EA4 # 7 = Result Screen / 2 = In Game / 1 = In Menu
 ADDR_IN_DEMO = 0x0029D4C4 # 0 = No / 1 = Yes
 ADDR_MENU = 0x002D496A # 0 = Main Menu / 6 = Difficulty / 7 = Character / 13 = Shot / 19 = Stage Select / 18 = Extra Difficulty
 ADDR_MENU_CURSOR = 0x002DC860
-ADDR_INPUT = 0x0029D904
 ADDR_STAGE = 0x0029D6D4
 ADDR_DIFFICULTY = 0x0029BCB0
 ADDR_RANK = 0x0029D710
@@ -267,12 +169,8 @@ ADDR_FOCUS_SPEED = 0x002CB022
 ADDR_NORMAL_SPEED_D = 0x002CB026
 ADDR_FOCUS_SPEED_D = 0x002CB02A
 
-#Difficulty lock
-ADDR_LOCK_1 = 0x000366F7
-ADDR_LOCK_2 = 0x00036572
-ADDR_LOCK_3 = 0x00036A10
-ADDR_LOCK_4 = 0x00036A8F
-ADDR_LOCK_JMP = 0x00036403
+#Character lock
+ADDR_LOCK = [0x000366F7, 0x00036572, 0x00036A10, 0x00036A8F, 0x00036403]
 ADDR_LOCK_FORCE_EXTRA = 0x0003641C
 
 # Sound
@@ -290,4 +188,3 @@ ADDR_FPS_TEXT = 0x002C6C08
 
 # Others
 ADDR_KILL_CONDITION = 0x00026DC6
-ADDR_CONTROLLER_HANDLER = 0x00023366

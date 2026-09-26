@@ -1,5 +1,5 @@
 from BaseClasses import MultiWorld
-from .Variables import *
+from .variables.globals import *
 from .Regions import get_regions
 
 def constructStageRule(player, state, nb_stage, mode, difficulty, character_list):

@@ -1,5 +1,5 @@
 from typing import Dict, NamedTuple, Optional
-from .Variables import *
+from .variables.globals import *
 
 from BaseClasses import Item, ItemClassification
 

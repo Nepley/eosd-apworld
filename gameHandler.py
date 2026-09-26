@@ -1,4 +1,4 @@
-from .Variables import *
+from .variables.globals import *
 from .gameController import gameController
 from .Tools import *
 import asyncio
@@ -24,8 +24,8 @@ class gameHandler:
 	limitLives = 8
 	limitBombs = 8
 
-	def __init__(self, pid):
-		self.gameController = gameController(pid)
+	def __init__(self, pid, name):
+		self.gameController = gameController(pid, name)
 		self.reset()
 		self.initGame()
 
@@ -82,7 +82,7 @@ class gameHandler:
 				difficulty = location_data[4]
 
 				# If it's not the Extra stage
-				if stage < 6:	
+				if stage < 6:
 					if difficulty >= 0:
 						if shot_type in SHOTS:
 							scores[character][shot_type][difficulty][stage][counter] += 1
@@ -296,8 +296,7 @@ class gameHandler:
 		if(self.lives < 8):
 			self.lives += 1
 
-		self.gameController.setPracticeStartingLives(self.getLives())
-		self.gameController.setNormalStartingLives(self.getLives())
+		self.gameController.setStartingLives(self.getLives())
 
 		if addInLevel and self.gameController.getGameMode() == IN_GAME and self.gameController.getInDemo() != 1:
 			self.gameController.setLives(self.gameController.getLives() + 1)
@@ -306,9 +305,7 @@ class gameHandler:
 		if(self.bombs < 8):
 			self.bombs += 1
 
-		self.gameController.setPracticeStartingBombs(self.getBombs())
-		self.gameController.setNormalStartingBombs(self.getBombs())
-		self.gameController.setRespawnBombs(self.getBombs())
+		self.gameController.setStartingBombs(self.getBombs())
 
 		if addInLevel and self.gameController.getGameMode() == IN_GAME and self.gameController.getInDemo() != 1:
 			self.gameController.setBombs(self.gameController.getBombs() + 1)
@@ -376,15 +373,12 @@ class gameHandler:
 	def setLivesLimit(self, limit):
 		if limit >= 0 and limit <= 8:
 			self.limitLives = limit
-			self.gameController.setPracticeStartingLives(self.getLives())
-			self.gameController.setNormalStartingLives(self.getLives())
+			self.gameController.setStartingLives(self.getLives())
 
 	def setBombsLimit(self, limit):
 		if limit >= 0 and limit <= 8:
 			self.limitBombs = limit
-			self.gameController.setPracticeStartingBombs(self.getBombs())
-			self.gameController.setNormalStartingBombs(self.getBombs())
-			self.gameController.setRespawnBombs(self.getBombs())
+			self.gameController.setStartingBombs(self.getBombs())
 
 	#
 	# Traps
@@ -442,20 +436,18 @@ class gameHandler:
 	# Other
 	#
 
-	def reconnect(self, pid):
-		self.gameController = gameController(pid)
+	def reconnect(self, pid, name):
+		self.gameController = gameController(pid, name)
 		self.initGame()
 
 	def initGame(self):
-		self.gameController.setPracticeStartingLives(self.lives)
-		self.gameController.setNormalStartingLives(self.lives)
-		self.gameController.setPracticeStartingBombs(self.bombs)
-		self.gameController.setNormalStartingBombs(self.bombs)
-		self.gameController.setRespawnBombs(self.bombs)
+		self.gameController.setStartingLives(self.lives)
+		self.gameController.setStartingBombs(self.bombs)
 
 		self.gameController.initSoundHack()
 		self.gameController.initDifficultyHack()
 		self.gameController.setLockToAllDifficulty()
+		self.gameController.disableDemo()
 
 	def reset(self):
 		"""

@@ -1,6 +1,6 @@
 from BaseClasses import MultiWorld, Region
 from .Locations import TLocation, location_table
-from .Variables import *
+from .variables.globals import *
 
 def get_regions(shot_type, difficulty_check, extra, exclude_lunatic):
 	regions = {}
