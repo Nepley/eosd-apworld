@@ -22,15 +22,14 @@ class gameController:
 		self.addrPower = self.pm.base_address+self.addresses.ADDR_POWER
 		self.addrContinues = self.pm.base_address+self.addresses.ADDR_CONTINUE
 
+		self.addrPracticeStartingLives = self.pm.base_address+self.addresses.ADDR_PRACTICE_STARTING_LIVES
+		self.addrNormalStartingLives = self.pm.base_address+self.addresses.ADDR_NORMAL_STARTING_LIVES
+		self.addrPracticeStartingBombs = self.pm.base_address+self.addresses.ADDR_PRACTICE_STARTING_BOMBS
+		self.addrNormalStartingBombs = self.pm.base_address+self.addresses.ADDR_NORMAL_STARTING_BOMBS
 		if self.name == "th06c":
-			self.addrStartingLives = self.pm.base_address+self.addresses.ADDR_STARTING_LIVES
-			self.addrStartingBombs = self.pm.base_address+self.addresses.ADDR_STARTING_BOMBS
-			self.addrRespawnBombs = self.pm.base_address+self.addresses.ADDR_RESPAWN_BOMBS
+			self.addrPracticeRespawnBombs = self.pm.base_address+self.addresses.ADDR_PRACTICE_RESPAWN_BOMBS
+			self.addrNormalRespawnBombs = self.pm.base_address+self.addresses.ADDR_NORMAL_RESPAWN_BOMBS
 		else:
-			self.addrPracticeStartingLives = self.pm.base_address+self.addresses.ADDR_PRACTICE_STARTING_LIVES
-			self.addrNormalStartingLives = self.pm.base_address+self.addresses.ADDR_NORMAL_STARTING_LIVES
-			self.addrPracticeStartingBombs = self.pm.base_address+self.addresses.ADDR_PRACTICE_STARTING_BOMBS
-			self.addrNormalStartingBombs = self.pm.base_address+self.addresses.ADDR_NORMAL_STARTING_BOMBS
 			self.addrRespawnBombs = self.pm.base_address+self.addresses.ADDR_RESPAWN_BOMBS
 
 		self.addrMisses = self.pm.base_address+self.addresses.ADDR_MISSES
@@ -483,19 +482,16 @@ class gameController:
 		self.pm.write_short(self.addrContinues, newContinue)
 
 	def setStartingLives(self, newStartingLives):
-		if self.name == "th06":
-			self.pm.write_bytes(self.addrPracticeStartingLives, bytes([newStartingLives]), 1)
-			self.pm.write_bytes(self.addrNormalStartingLives, bytes([newStartingLives]), 1)
-		else:
-			self.pm.write_bytes(self.addrStartingLives, bytes([newStartingLives]), 1)
+		self.pm.write_bytes(self.addrPracticeStartingLives, bytes([newStartingLives]), 1)
+		self.pm.write_bytes(self.addrNormalStartingLives, bytes([newStartingLives]), 1)
 
 	def setStartingBombs(self, newStartingBombs):
-		if self.name == "th06":
-			self.pm.write_bytes(self.addrPracticeStartingBombs, bytes([newStartingBombs]), 1)
-			self.pm.write_bytes(self.addrNormalStartingBombs, bytes([newStartingBombs]), 1)
-			self.pm.write_bytes(self.addrRespawnBombs, bytes([newStartingBombs]), 1)
+		self.pm.write_bytes(self.addrPracticeStartingBombs, bytes([newStartingBombs]), 1)
+		self.pm.write_bytes(self.addrNormalStartingBombs, bytes([newStartingBombs]), 1)
+		if self.name == "th06c":
+			self.pm.write_bytes(self.addrPracticeRespawnBombs, bytes([newStartingBombs]), 1)
+			self.pm.write_bytes(self.addrNormalRespawnBombs, bytes([newStartingBombs]), 1)
 		else:
-			self.pm.write_bytes(self.addrStartingBombs, bytes([newStartingBombs]), 1)
 			self.pm.write_bytes(self.addrRespawnBombs, bytes([newStartingBombs]), 1)
 
 	def setMisses(self, newMisses):
