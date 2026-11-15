@@ -208,6 +208,7 @@ class TouhouContext(CommonContext):
 		self.last_power_point = -1
 
 		self.handler = None # gameHandler
+		self.currentGame = None
 		self.inError = False
 		self.msgQueue = []
 
@@ -632,6 +633,7 @@ class TouhouContext(CommonContext):
 						currentMode = IN_GAME
 						bossCounter = -1
 						bossPresent = False
+						self.handler.allowChangingShotType(False)
 
 						# If the current situation is technically not possible, we lock checks
 						if(not self.handler.checkIfCurrentIsPossible((self.options['mode'] in NORMAL_MODE))):
@@ -665,6 +667,7 @@ class TouhouContext(CommonContext):
 					# We enter in the menu
 					if(currentMode != IN_MENU):
 						self.handler.resetStageVariables()
+						self.handler.allowChangingShotType(True)
 						currentMode = IN_MENU
 						resourcesGiven = False
 						noCheck = False # We enable the checks once we're in the menu
@@ -914,7 +917,7 @@ class TouhouContext(CommonContext):
 		"""
 		try:
 			while not self.exit_event.is_set() and self.handler and not self.inError:
-				if self.msgQueue != []:
+				if self.msgQueue != [] and self.currentGame["name"] != "th06nc":
 					msg = self.msgQueue[0]
 					self.msgQueue.pop(0)
 					task = asyncio.create_task(self.handler.displayMessage(msg['msg'], msg['color']))
@@ -1013,7 +1016,9 @@ class TouhouContext(CommonContext):
 						pid = game["process"]
 
 					if pid:
+						self.currentGame = game
 						self.handler = gameHandler(pid, game["name"])
+						break
 				except:
 					pass
 			await asyncio.sleep(2)
@@ -1032,7 +1037,9 @@ class TouhouContext(CommonContext):
 						pid = game["process"]
 
 					if pid:
+						self.currentGame = game
 						self.handler.reconnect(pid, game["name"])
+						break
 				except:
 					pass
 			await asyncio.sleep(2)

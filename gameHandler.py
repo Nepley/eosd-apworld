@@ -45,6 +45,10 @@ class gameHandler:
 	def initResources(self, normalMode = False, autoDifficulty = False):
 		self.givePower()
 
+		# In th06nc, if the player is in challenge mode and has 0 lives, a game over happen when dying. So we give one life to prevent that.
+		if self.gameController.getInChallengeMode() and self.getLives() == 0:
+			self.gameController.setLives(1)
+
 		if normalMode:
 			self.giveContinues()
 
@@ -370,6 +374,11 @@ class gameHandler:
 	def unlockCharacter(self, character, shot):
 		self.characters[character][shot] = True
 
+		# In order to not have the wrong character selected at the start
+		if not self.firstCharacterUnlocked:
+			self.firstCharacterUnlocked = True
+			self.gameController.setCharacter(character)
+
 	def setLivesLimit(self, limit):
 		if limit >= 0 and limit <= 8:
 			self.limitLives = limit
@@ -480,6 +489,7 @@ class gameHandler:
 		self.difficulties = {LUNATIC: True, HARD: False, NORMAL: False, EASY: False}
 
 		self.characters = {}
+		self.firstCharacterUnlocked = False
 		for character in CHARACTERS:
 			self.characters[character] = {}
 			for shot in SHOTS:
@@ -586,3 +596,6 @@ class gameHandler:
 			possible = False
 
 		return possible
+
+	def allowChangingShotType(self, active):
+		self.gameController.allowChangingShotType(active)

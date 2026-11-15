@@ -1,4 +1,5 @@
 GAMES = [
+        {"name": "th06nc", "process": "th06nc.exe", "checksum": ""},
         {"name": "th06c", "process": "th06c.exe", "checksum": ""},
         {"name": "th06", "process": "東方紅魔郷", "checksum": "e61b4f4fea3802e926ef307f45166599c3e86555"}
     ]

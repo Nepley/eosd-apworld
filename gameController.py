@@ -2,6 +2,7 @@ import pymem
 from .variables.globals import *
 from .variables import th06
 from .variables import th06c
+from .variables import th06nc
 
 class gameController:
 	"""Class accessing the game memory"""
@@ -9,13 +10,24 @@ class gameController:
 		self.pm = pymem.Pymem(pid)
 		self.name = name
 
-		self.addresses = th06c if self.name == "th06c" else th06
+		if self.name == "th06nc":
+			self.addresses = th06nc
+		elif self.name == "th06c":
+			self.addresses = th06c
+		else:
+			self.addresses = th06
 
 		self.addrStage = self.pm.base_address+self.addresses.ADDR_STAGE
 		self.addrDifficulty = self.pm.base_address+self.addresses.ADDR_DIFFICULTY
-		self.addrRank = self.pm.base_address+self.addresses.ADDR_RANK
 		self.addrCharacter = self.pm.base_address+self.addresses.ADDR_CHARACTER
 		self.addrShotType = self.pm.base_address+self.addresses.ADDR_SHOT_TYPE
+
+		if self.name != "th06nc":
+			self.addrRank = self.pm.base_address+self.addresses.ADDR_RANK
+
+		if self.name == "th06nc":
+			self.addrInChallengeMode = self.pm.base_address+self.addresses.ADDR_IN_CHALLENGE_MODE
+			self.addrSetShotType = self.pm.base_address+self.addresses.ADDR_SET_SHOT_TYPE
 
 		self.addrLives = self.pm.base_address+self.addresses.ADDR_LIVES
 		self.addrBombs = self.pm.base_address+self.addresses.ADDR_BOMBS
@@ -26,7 +38,7 @@ class gameController:
 		self.addrNormalStartingLives = self.pm.base_address+self.addresses.ADDR_NORMAL_STARTING_LIVES
 		self.addrPracticeStartingBombs = self.pm.base_address+self.addresses.ADDR_PRACTICE_STARTING_BOMBS
 		self.addrNormalStartingBombs = self.pm.base_address+self.addresses.ADDR_NORMAL_STARTING_BOMBS
-		if self.name == "th06c":
+		if self.name != "th06":
 			self.addrPracticeRespawnBombs = self.pm.base_address+self.addresses.ADDR_PRACTICE_RESPAWN_BOMBS
 			self.addrNormalRespawnBombs = self.pm.base_address+self.addresses.ADDR_NORMAL_RESPAWN_BOMBS
 		else:
@@ -62,7 +74,7 @@ class gameController:
 		if self.name == "th06c":
 			self.addrDemoTime1 = self.pm.base_address+self.addresses.ADDR_DEMO_TIMER_1
 			self.addrDemoTime2 = self.pm.base_address+self.addresses.ADDR_DEMO_TIMER_2
-		else:
+		elif self.name == "th06":
 			self.addrInDemo = self.pm.base_address+self.addresses.ADDR_IN_DEMO
 
 		self.addrGameMode = self.pm.base_address+self.addresses.ADDR_GAME_MODE
@@ -77,7 +89,8 @@ class gameController:
 		for lock in self.addresses.ADDR_LOCK:
 			self.addrCharacterLock.append(self.pm.base_address+lock)
 
-		self.addrForceExtra = self.pm.base_address+self.addresses.ADDR_LOCK_FORCE_EXTRA
+		if self.name == "th06":
+			self.addrForceExtra = self.pm.base_address+self.addresses.ADDR_LOCK_FORCE_EXTRA
 
 		self.addrNormalSpeed = self.pm.base_address+self.addresses.ADDR_NORMAL_SPEED
 		self.addrFocusSpeed = self.pm.base_address+self.addresses.ADDR_FOCUS_SPEED
@@ -266,7 +279,16 @@ class gameController:
 		return int.from_bytes(self.pm.read_bytes(self.addrDifficulty, 1))
 
 	def getRank(self):
-		return int.from_bytes(self.pm.read_bytes(self.addrRank, 1))
+		if self.name != "th06nc":
+			return int.from_bytes(self.pm.read_bytes(self.addrRank, 1))
+		else:
+			return 0
+
+	def getInChallengeMode(self):
+		if self.name == "th06nc":
+			return int.from_bytes(self.pm.read_bytes(self.addrInChallengeMode, 1))
+		else:
+			return 0
 
 	def getCharacter(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrCharacter, 1))
@@ -461,7 +483,8 @@ class gameController:
 		self.pm.write_short(self.addrDifficulty, newDifficulty)
 
 	def setRank(self, newRank):
-		self.pm.write_bytes(self.addrRank, bytes([newRank]), 1)
+		if self.name != "th06nc":
+			self.pm.write_bytes(self.addrRank, bytes([newRank]), 1)
 
 	def setCharacter(self, newCharacter):
 		self.pm.write_short(self.addrCharacter, newCharacter)
@@ -488,7 +511,7 @@ class gameController:
 	def setStartingBombs(self, newStartingBombs):
 		self.pm.write_bytes(self.addrPracticeStartingBombs, bytes([newStartingBombs]), 1)
 		self.pm.write_bytes(self.addrNormalStartingBombs, bytes([newStartingBombs]), 1)
-		if self.name == "th06c":
+		if self.name != "th06":
 			self.pm.write_bytes(self.addrPracticeRespawnBombs, bytes([newStartingBombs]), 1)
 			self.pm.write_bytes(self.addrNormalRespawnBombs, bytes([newStartingBombs]), 1)
 		else:
@@ -616,8 +639,8 @@ class gameController:
 		self.pm.write_bytes(self.addrDifficultyDown, bytes([difficultyDown]), 1)
 
 	def setDifficultyUp(self, difficultyUp):
-		if self.name == "th06c":
-			difficultyUp = 255 if difficultyUp == 0 else difficultyUp - 1 
+		if self.name != "th06":
+			difficultyUp = 255 if difficultyUp == 0 else difficultyUp - 1
 		self.pm.write_bytes(self.addrDifficultyUp, bytes([difficultyUp]), 1)
 
 	def setNormalSpeed(self, newNormalSpeed):
@@ -644,11 +667,16 @@ class gameController:
 				self.pm.write_bytes(self.addrKillCondition, bytes([0x90, 0x90]), 2)
 			else:
 				self.pm.write_bytes(self.addrKillCondition, bytes([0xEB, 0x22]), 2)
-		else:
+		elif self.name == "th06c":
 			if active:
 				self.pm.write_bytes(self.addrKillCondition, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 6)
 			else:
 				self.pm.write_bytes(self.addrKillCondition, bytes([0x0F, 0x87, 0xF7, 0x00, 0x00, 0x00]), 6)
+		else:
+			if active:
+				self.pm.write_bytes(self.addrKillCondition, bytes([0xEB]), 1)
+			else:
+				self.pm.write_bytes(self.addrKillCondition, bytes([0x75]), 1)
 
 	def setLockToAllDifficulty(self):
 		for lock in self.addrCharacterLock:
@@ -705,3 +733,12 @@ class gameController:
 		if self.name == "th06c":
 			self.pm.write_bytes(self.addrDemoTime1, bytes([0x90, 0x90]), 2)
 			self.pm.write_bytes(self.addrDemoTime2, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 6)
+
+	def allowChangingShotType(self, active):
+		# In th06nc, due to applying the Extra logic to lock characters, it seem to have a bug where the shot type reset to 0 everytime you go back to the stage selection.
+		# We just remove the line that set the shot type for the duration of the stage and put it back when returning to the menu.
+		if self.name == "th06nc":
+			if active:
+				self.pm.write_bytes(self.addrSetShotType, bytes([0x88, 0x05, 0xA1, 0xF7, 0x4E, 0x00]), 6)
+			else:
+				self.pm.write_bytes(self.addrSetShotType, bytes([0x90, 0x90, 0x90, 0x90, 0x90, 0x90]), 6)
