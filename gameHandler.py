@@ -52,7 +52,7 @@ class gameHandler:
 		if normalMode:
 			self.giveContinues()
 
-			if autoDifficulty:
+			if autoDifficulty and self.gameController.name != "th06nc":
 				self.setDifficulty(True)
 
 	def updateStageList(self, practiceMode = True):
@@ -354,7 +354,7 @@ class gameHandler:
 	def unlockDifficulty(self, difficulty, update = False):
 		self.difficulties[difficulty] = True
 
-		if update:
+		if update and self.gameController.name != "th06nc":
 			self.setDifficulty(True)
 
 	def unlockExtraStage(self, character = -1, shot_type = -1):

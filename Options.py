@@ -9,7 +9,7 @@ class Mode(Choice):
                            Restriction in life, bomb or difficulty for stages 3/4 and 5/6 and character are the only logical gate
                            The difficulty is dynamic, meaning that choosing a difficulty at the start doesn't change the one that you will get and will always be set to the lowest unlocked
                            Easy difficulty is not available in this mode as it stop at the stage 5
-    Normal Mode - Static: Same as above but the difficulty is static. Note that you will still be unable to get to the stage 6 if you choose Easy difficulty
+    Normal Mode - Static: Same as above but the difficulty is static. Note that you will still be unable to get to the stage 6 if you choose Easy difficulty. New Classic is forced in Static.
 	"""
 	display_name = "Mode played"
 	option_practice = 0
