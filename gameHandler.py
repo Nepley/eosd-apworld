@@ -292,6 +292,15 @@ class gameHandler:
 	def getCurrentPowerPoint(self):
 		return self.gameController.getPower()
 
+	def getCurrentScore(self):
+		return self.gameController.getScore()
+	
+	def getCurrentContinues(self):
+		return self.gameController.getContinues()
+	
+	def isInChallengeMode(self):
+		return self.gameController.getInChallengeMode() == 1
+
 	#
 	# Set Items Functions
 	#
@@ -375,9 +384,13 @@ class gameHandler:
 		self.characters[character][shot] = True
 
 		# In order to not have the wrong character selected at the start
-		if not self.firstCharacterUnlocked:
+		if self.gameController.name == "th06nc" and not self.firstCharacterUnlocked:
 			self.firstCharacterUnlocked = True
 			self.gameController.setCharacter(character)
+
+			# If the player is in the character select screen, we also change the cursor position
+			if self.gameController.getMenu() == CHARACTER_MENU:
+				self.gameController.setMenuCursor(character)
 
 	def setLivesLimit(self, limit):
 		if limit >= 0 and limit <= 8:

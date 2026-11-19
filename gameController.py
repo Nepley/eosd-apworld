@@ -26,6 +26,7 @@ class gameController:
 			self.addrRank = self.pm.base_address+self.addresses.ADDR_RANK
 
 		if self.name == "th06nc":
+			self.addrScore = self.pm.base_address+self.addresses.ADDR_SCORE
 			self.addrInChallengeMode = self.pm.base_address+self.addresses.ADDR_IN_CHALLENGE_MODE
 			self.addrSetShotType = self.pm.base_address+self.addresses.ADDR_SET_SHOT_TYPE
 
@@ -41,6 +42,10 @@ class gameController:
 		if self.name != "th06":
 			self.addrPracticeRespawnBombs = self.pm.base_address+self.addresses.ADDR_PRACTICE_RESPAWN_BOMBS
 			self.addrNormalRespawnBombs = self.pm.base_address+self.addresses.ADDR_NORMAL_RESPAWN_BOMBS
+
+			if self.name == "th06nc":
+				self.addrPracticeRestartLives = self.pm.base_address+self.addresses.ADDR_PRACTICE_RESTART_LIVES
+				self.addrPracticeRestartBombs = self.pm.base_address+self.addresses.ADDR_PRACTICE_RESTART_BOMBS
 		else:
 			self.addrRespawnBombs = self.pm.base_address+self.addresses.ADDR_RESPAWN_BOMBS
 
@@ -308,6 +313,12 @@ class gameController:
 	def getMisses(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrMisses, 1))
 
+	def getScore(self):
+		if self.name == "th06nc":
+			return self.pm.read_int(self.addrScore)
+		else:
+			return 0
+
 	def getContinues(self):
 		return int.from_bytes(self.pm.read_bytes(self.addrContinues, 1))
 
@@ -508,12 +519,18 @@ class gameController:
 		self.pm.write_bytes(self.addrPracticeStartingLives, bytes([newStartingLives]), 1)
 		self.pm.write_bytes(self.addrNormalStartingLives, bytes([newStartingLives]), 1)
 
+		if self.name == "th06nc":
+			self.pm.write_bytes(self.addrPracticeRestartLives, bytes([newStartingLives]), 1)
+
 	def setStartingBombs(self, newStartingBombs):
 		self.pm.write_bytes(self.addrPracticeStartingBombs, bytes([newStartingBombs]), 1)
 		self.pm.write_bytes(self.addrNormalStartingBombs, bytes([newStartingBombs]), 1)
 		if self.name != "th06":
 			self.pm.write_bytes(self.addrPracticeRespawnBombs, bytes([newStartingBombs]), 1)
 			self.pm.write_bytes(self.addrNormalRespawnBombs, bytes([newStartingBombs]), 1)
+
+			if self.name == "th06nc":
+				self.pm.write_bytes(self.addrPracticeRestartBombs, bytes([newStartingBombs]), 1)
 		else:
 			self.pm.write_bytes(self.addrRespawnBombs, bytes([newStartingBombs]), 1)
 

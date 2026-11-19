@@ -25,7 +25,8 @@ from CommonClient import (
 class TouhouClientProcessor(ClientCommandProcessor):
 	def _cmd_multiple_difficulty_check(self, active = None):
 		"""Toggle the possibility to check multiple difficulty check by doing the highest difficulty
-        :param active: If "on" or "true", enable it. If "off" or "false", disable it."""
+        :param active: If "on" or "true", enable it. If "off" or "false", disable it.
+		"""
 		changed = False
 		if self.ctx.handler is not None and self.ctx.handler.gameController is not None:
 			if active is not None:
@@ -48,7 +49,8 @@ class TouhouClientProcessor(ClientCommandProcessor):
 
 	def _cmd_deathlink(self, active = None):
 		"""Toggle DeathLink on or off
-        :param active: If "on" or "true", enable DeathLink. If "off" or "false", disable DeathLink."""
+        :param active: If "on" or "true", enable DeathLink. If "off" or "false", disable DeathLink.
+		"""
 		changed = False
 		if self.ctx.handler is not None and self.ctx.handler.gameController is not None:
 			if active is not None:
@@ -77,8 +79,8 @@ class TouhouClientProcessor(ClientCommandProcessor):
 		return changed
 
 	def _cmd_deathlink_trigger(self, value = None):
-		"""Get or Set the trigger for the DeayhLink trigger
-        :param value: Possibler values are "life" or "gameover"
+		"""Get or Set the trigger for the DeathLink trigger
+        :param value: Possible values are "life" or "gameover"
 		"""
 		if self.ctx.handler is not None and self.ctx.handler.gameController is not None:
 			if value is not None:
@@ -98,12 +100,13 @@ class TouhouClientProcessor(ClientCommandProcessor):
 				logger.info(f"Current DeathLink Trigger: {trigger}")
 				return True
 		else:
-			logger.error("DeathLink amnesty cannot be accessed before connecting to the game and server")
+			logger.error("DeathLink trigger cannot be accessed before connecting to the game and server")
 			return False
 
 	def _cmd_deathlink_amnesty(self, value = -1):
 		"""Get or Set the number of death before sending a DeathLink
-        :param value: Set the amnesty to this value, must be between 0 and 10."""
+        :param value: Set the amnesty to this value, must be between 0 and 10.
+		"""
 		if self.ctx.handler is not None and self.ctx.handler.gameController is not None:
 			if value == -1:
 				logger.info(f"Current DeathLink amnesty: {self.ctx.death_link_amnesty}")
@@ -125,7 +128,8 @@ class TouhouClientProcessor(ClientCommandProcessor):
 
 	def _cmd_ringlink(self, active = None):
 		"""Toggle RingLink on or off
-        :param active: If "on" or "true", enable RingLink. If "off" or "false", disable RingLink."""
+        :param active: If "on" or "true", enable RingLink. If "off" or "false", disable RingLink.
+		"""
 		changed = False
 		if self.ctx.handler is not None and self.ctx.handler.gameController is not None:
 			if active is not None:
@@ -156,7 +160,8 @@ class TouhouClientProcessor(ClientCommandProcessor):
 	def _cmd_limits(self, lives = -1, bombs = -1):
 		"""Get or Set the max limits for lives and bombs
         :param lives: New max lives value, must be between 0 and 8.
-        :param bombs: New max bombs value, must be between 0 and 8."""
+        :param bombs: New max bombs value, must be between 0 and 8.
+		"""
 		if self.ctx.handler is not None and self.ctx.handler.gameController is not None:
 			if lives == -1 and bombs == -1:
 				logger.info(f"Current max lives: {self.ctx.handler.limitLives} / Current max bombs: {self.ctx.handler.limitBombs}")
@@ -177,9 +182,34 @@ class TouhouClientProcessor(ClientCommandProcessor):
 		else:
 			logger.error("Limits cannot be accessed before connecting to the game and server")
 			return False
+	
+	def _cmd_challenge_mode(self, value = None):
+		"""[New Classic] Enable or disable sending check while in challenge mode
+        :param value: set 'allow' or 'enable' to enable check, 'disallow' or 'disable' else."
+		"""
+		if self.ctx.handler is not None and self.ctx.handler.gameController is not None:
+			if value is not None:
+				if value.lower() in ("allow", 'enable'):
+					self.ctx.challenge_mode_allowed = True
+					logger.info("Challenge mode is now allowed to send checks")
+					return True
+				elif value.lower() in ("disallow", 'disable'):
+					self.ctx.challenge_mode_allowed = False
+					logger.info("Challenge mode is now not allowed to send checks")
+					return True
+				else:
+					logger.error("Invalid argument, possibles values are 'allow', 'enable', 'disallow' or 'disable'")
+					return False
+			else:
+				state = "allowed" if self.ctx.challenge_mode_allowed else "not allowed"
+				logger.info(f"Sending check in challenge mode is {state}")
+				return True
+		else:
+			logger.error("Challenge mode state cannot be accessed before connecting to the game and server")
+			return False
 
 	def _cmd_launch(self):
-		"""Launch Touhou EOSD"""
+		"""[Original Version] Launch Touhou EOSD"""
 		game_exe = get_settings().touhou_eosd_settings.game_exe
 
 		if not game_exe:
@@ -229,6 +259,7 @@ class TouhouContext(CommonContext):
 		self.ring_link_is_active = False
 		self.death_link_amnesty = 0
 		self.death_link_trigger = DEATH_LINK_LIFE
+		self.challenge_mode_allowed = False
 
 		# Counter
 		self.difficulties = 3
@@ -633,15 +664,31 @@ class TouhouContext(CommonContext):
 						currentMode = IN_GAME
 						bossCounter = -1
 						bossPresent = False
+						currentScore = 0
+						currentContinue = self.handler.getCurrentContinues()
 						self.handler.allowChangingShotType(False)
 
 						# If the current situation is technically not possible, we lock checks
 						if(not self.handler.checkIfCurrentIsPossible((self.options['mode'] in NORMAL_MODE))):
 							noCheck = False
 
+						# If challenge mode is not allowed, we send a message
+						if self.handler.isInChallengeMode() and not self.challenge_mode_allowed:
+							logger.info("Notice: Challenge mode is currently not allowed to send check.")
+
 					if(not resourcesGiven):
 						self.giveResources()
 						resourcesGiven = True
+
+					# We check if the current score is the same or higher than the previous one
+					if(currentScore <= self.handler.getCurrentScore() or (self.options['mode'] in NORMAL_MODE and currentContinue <= self.handler.getCurrentContinues())):
+						currentScore = self.handler.getCurrentScore()
+						currentContinue = self.handler.getCurrentContinues()
+					else:
+						# If the score is lower, it mean the stage has been restarted, we end the loop and act like we just enter the stage
+						currentMode = -1
+						resourcesGiven = False
+						continue
 
 					# Boss Check
 					if(not bossPresent):
@@ -656,8 +703,11 @@ class TouhouContext(CommonContext):
 									#We disable the trap if the stage is ending
 									if bossCounter%2 == 1:
 										self.can_trap = False
-									self.handler.setCurrentStageBossBeaten(bossCounter%2, self.check_multiple_difficulty)
-									await self.update_locations_checked()
+
+									# If the player is in challenge mode and it's not enable, we do not send the location
+									if not self.handler.isInChallengeMode() or self.challenge_mode_allowed:
+										self.handler.setCurrentStageBossBeaten(bossCounter%2, self.check_multiple_difficulty)
+										await self.update_locations_checked()
 								bossPresent = False
 
 					# If we're in practice mode and a third boss spawn, it's not normal and we stop sending checks
